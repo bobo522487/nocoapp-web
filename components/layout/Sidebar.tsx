@@ -1,8 +1,8 @@
 import React from 'react';
 import { ChevronRight, ChevronDown, File as FileIcon, Folder as FolderIcon, FolderOpen, X } from 'lucide-react';
 import { FileSystemNode, FileType, ViewMode } from '../../types';
-import PagesPanel from '../../features/apps/components/PagesPanel';
-import TablePanel from '../../features/data/components/TablePanel';
+import PagesPanel from '../../features/app-builder/components/PagesPanel';
+import TablePanel from '../../features/data-modeler/components/TablePanel';
 
 // --- File Tree Component (Used in other views if needed) ---
 interface FileTreeProps {

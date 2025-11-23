@@ -21,6 +21,7 @@ import {
   LayoutGrid,
   GripVertical
 } from 'lucide-react';
+import { Input } from "../../../components/ui/input";
 
 // --- Config Data ---
 const SECTIONS = [
@@ -78,16 +79,16 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-ide-sidebar animate-in slide-in-from-left-4 duration-200">
+    <div className="flex flex-col h-full bg-card animate-in slide-in-from-left-4 duration-200">
       {/* Header Tabs */}
-      <div className="flex items-center p-3 pb-0 border-b border-ide-border shrink-0">
+      <div className="flex items-center p-3 pb-0 border-b border-border shrink-0">
          <div className="flex-1 flex gap-4">
             <button 
                 onClick={() => setActiveTab('components')}
                 className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'components' 
-                    ? 'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400' 
-                    : 'text-gray-500 border-transparent hover:text-ide-text'
+                    ? 'text-primary border-primary' 
+                    : 'text-muted-foreground border-transparent hover:text-foreground'
                 }`}
             >
                 Components
@@ -96,8 +97,8 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
                 onClick={() => setActiveTab('modules')}
                 className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'modules' 
-                    ? 'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400' 
-                    : 'text-gray-500 border-transparent hover:text-ide-text'
+                    ? 'text-primary border-primary' 
+                    : 'text-muted-foreground border-transparent hover:text-foreground'
                 }`}
             >
                 Modules
@@ -106,18 +107,16 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-[#333] scrollbar-track-transparent p-3">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent p-3">
         
         {/* Search Bar */}
-        <div className="mb-4">
-           <div className="relative group">
-             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-             <input 
+        <div className="mb-4 relative">
+             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+             <Input 
                type="text" 
                placeholder="Search components" 
-               className="w-full pl-9 pr-3 py-1.5 bg-gray-100 dark:bg-[#151515] border border-transparent focus:border-blue-500 rounded text-xs text-ide-text outline-none transition-all placeholder-gray-500"
+               className="pl-9 h-8 text-xs bg-muted/30"
              />
-           </div>
         </div>
 
         {activeTab === 'components' ? (
@@ -127,13 +126,13 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
                     <div key={section.title} className="border-b border-transparent">
                         <button 
                             onClick={() => toggleSection(section.title)}
-                            className="w-full flex items-center justify-between py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-blue-600 transition-colors group"
+                            className="w-full flex items-center justify-between py-2 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors group"
                         >
                             <span>{section.title}</span>
                             {openSections[section.title] ? (
-                                <ChevronDown size={12} className="text-gray-400 group-hover:text-blue-600" />
+                                <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary" />
                             ) : (
-                                <ChevronRight size={12} className="text-gray-400 group-hover:text-blue-600" />
+                                <ChevronRight size={12} className="text-muted-foreground group-hover:text-primary" />
                             )}
                         </button>
                         
@@ -144,15 +143,15 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
                                         key={`${section.title}-${idx}`}
                                         draggable
                                         onDragEnd={onClose}
-                                        className="flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-ide-hover hover:border-ide-border cursor-grab active:cursor-grabbing transition-all group relative"
+                                        className="flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-grab active:cursor-grabbing transition-all group relative"
                                     >
-                                        <div className="w-10 h-10 flex items-center justify-center mb-1 relative bg-gray-50 dark:bg-[#1a1a1a] rounded-md group-hover:bg-white dark:group-hover:bg-[#252525] transition-colors border border-transparent group-hover:border-gray-200 dark:group-hover:border-[#333]">
-                                            <item.icon size={20} strokeWidth={1.5} className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                        <div className="w-10 h-10 flex items-center justify-center mb-1 relative bg-muted/50 rounded-md group-hover:bg-background transition-colors border border-transparent group-hover:border-border">
+                                            <item.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary transition-colors" />
                                             {item.isNew && (
                                                 <span className="absolute -top-1 -right-1 text-[8px] bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-1 rounded-sm font-bold">New</span>
                                             )}
                                         </div>
-                                        <span className="text-[10px] text-gray-600 dark:text-gray-400 text-center leading-tight group-hover:text-ide-text mt-1">
+                                        <span className="text-[10px] text-muted-foreground text-center leading-tight group-hover:text-foreground mt-1">
                                             {item.name}
                                         </span>
                                     </div>
@@ -173,12 +172,12 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
                         key={mod.id} 
                         draggable 
                         onDragEnd={onClose}
-                        className="flex items-center p-2 rounded border border-transparent hover:bg-ide-hover hover:border-ide-border cursor-grab active:cursor-grabbing transition-all group"
+                        className="flex items-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-grab active:cursor-grabbing transition-all group"
                     >
-                        <div className="w-12 h-10 flex items-center justify-center bg-gray-50 dark:bg-[#151515] rounded mr-3 group-hover:bg-white dark:group-hover:bg-[#252525] transition-colors">
-                             <mod.icon size={20} strokeWidth={1.5} className="text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                        <div className="w-12 h-10 flex items-center justify-center bg-muted/50 rounded mr-3 group-hover:bg-background transition-colors">
+                             <mod.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary" />
                         </div>
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{mod.title}</span>
+                        <span className="text-sm font-medium text-foreground">{mod.title}</span>
                     </div>
                 ))}
             </div>

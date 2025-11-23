@@ -1,6 +1,10 @@
 import React from 'react';
 import { LayoutGrid, Database, Plus, MoreHorizontal, Pencil, Play } from 'lucide-react';
 import { ViewMode } from '../../../types';
+import { Button } from "../../../components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../components/ui/card";
+import { Badge } from "../../../components/ui/badge";
+import { Separator } from "../../../components/ui/separator";
 
 interface DashboardPageProps {
   setActiveView: (view: ViewMode) => void;
@@ -70,63 +74,67 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveView }) => {
                 <LayoutGrid className="text-muted-foreground" size={20} />
                 <h2 className="text-xl font-semibold text-foreground">Applications</h2>
             </div>
-            <button 
+            <Button 
+                variant="ghost" 
+                className="gap-2 text-primary hover:text-primary/80"
                 onClick={() => setActiveView(ViewMode.APPS)}
-                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
                 New Application <Plus size={16} />
-            </button>
+            </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {apps.map(app => (
-                <div key={app.id} className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col p-6">
-                    {/* Card Header */}
-                    <div className="flex justify-between items-start mb-4">
-                        <div className={`w-10 h-10 rounded-lg ${app.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
-                            <LayoutGrid size={20} className={app.color.replace('bg-', 'text-')} />
+                <Card key={app.id} className="hover:shadow-md transition-all duration-300 group flex flex-col">
+                    <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                            <div className={`w-10 h-10 rounded-lg ${app.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
+                                <LayoutGrid size={20} className={app.color.replace('bg-', 'text-')} />
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal size={16} />
+                            </Button>
                         </div>
-                        <button className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted transition-all duration-200">
-                            <MoreHorizontal size={20} />
-                        </button>
-                    </div>
-
-                    {/* Title */}
-                    <h3 
-                        className="font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors cursor-pointer tracking-tight" 
-                        onClick={() => setActiveView(ViewMode.APPS)}
-                    >
-                        {app.name}
-                    </h3>
-                    
-                    {/* Description */}
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                        {app.description}
-                    </p>
-                    
-                    {/* Meta Info */}
-                    <div className="text-xs text-muted-foreground mb-6 font-medium">
-                        Edited {app.lastEdited}
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <button 
+                        <CardTitle 
+                            className="text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
                             onClick={() => setActiveView(ViewMode.APPS)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium py-2 px-4 rounded-md transition-colors shadow-sm"
+                        >
+                            {app.name}
+                        </CardTitle>
+                        <CardDescription className="line-clamp-2 mt-1.5">
+                            {app.description}
+                        </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="pb-3 flex-1">
+                         <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+                            <span>Edited {app.lastEdited}</span>
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
+                            <span>{app.pages.length} Pages</span>
+                        </div>
+                    </CardContent>
+
+                    <CardFooter className="pt-3 border-t bg-muted/5 opacity-0 group-hover:opacity-100 transition-opacity gap-3">
+                        <Button 
+                            className="flex-1 gap-2" 
+                            variant="default"
+                            onClick={() => setActiveView(ViewMode.APPS)}
                         >
                             <Pencil size={14} /> Edit
-                        </button>
-                        <button 
-                            className="flex-1 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 text-sm font-medium py-2 px-4 rounded-md transition-colors"
+                        </Button>
+                        <Button 
+                            className="flex-1 gap-2" 
+                            variant="secondary"
                         >
                             <Play size={14} className="opacity-80" /> Launch
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </CardFooter>
+                </Card>
             ))}
         </div>
       </div>
+
+      <Separator className="my-8 max-w-6xl mx-auto" />
 
       {/* Data Sources Section */}
       <div className="max-w-6xl mx-auto w-full">
@@ -135,55 +143,62 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveView }) => {
                 <Database className="text-muted-foreground" size={20} />
                 <h2 className="text-xl font-semibold text-foreground">Data Sources</h2>
             </div>
-            <button 
+            <Button 
+                variant="ghost" 
+                className="gap-2 text-primary hover:text-primary/80"
                 onClick={() => setActiveView(ViewMode.DATA)}
-                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
                 Connect Data <Plus size={16} />
-            </button>
+            </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {dataSources.map(src => (
-                <div key={src.id} className="bg-card text-card-foreground rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col p-6">
-                    <div className="flex items-start justify-between mb-4">
-                         <div className={`w-10 h-10 rounded-lg ${src.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
-                            <Database size={20} className={src.color.replace('bg-', 'text-')} />
-                         </div>
-                         <button className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 rounded hover:bg-muted transition-all duration-200">
-                            <MoreHorizontal size={20} />
-                        </button>
-                    </div>
+                <Card key={src.id} className="hover:shadow-md transition-all duration-300 group flex flex-col">
+                    <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                             <div className={`w-10 h-10 rounded-lg ${src.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
+                                <Database size={20} className={src.color.replace('bg-', 'text-')} />
+                             </div>
+                             <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal size={16} />
+                            </Button>
+                        </div>
+                        <CardTitle 
+                             className="text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
+                             onClick={() => setActiveView(ViewMode.DATA)}
+                        >
+                            {src.name}
+                        </CardTitle>
+                        <div className="mt-2">
+                            <Badge variant="secondary" className="font-normal">{src.type}</Badge>
+                        </div>
+                    </CardHeader>
                     
-                    <h3 
-                         className="font-semibold text-lg text-foreground mb-2 group-hover:text-primary transition-colors cursor-pointer tracking-tight"
-                         onClick={() => setActiveView(ViewMode.DATA)}
-                    >
-                        {src.name}
-                    </h3>
-                    
-                    <div className="text-sm text-muted-foreground mb-4">
-                        <span className="bg-muted px-2 py-0.5 rounded text-xs font-medium">{src.type}</span>
-                    </div>
+                    <CardContent className="pb-3 flex-1">
+                        <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
+                            <span>Edited {src.lastEdited}</span>
+                             <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
+                            <span>{src.tables.length} Tables</span>
+                        </div>
+                    </CardContent>
 
-                    <div className="text-xs text-muted-foreground mb-6 font-medium">
-                        Edited {src.lastEdited}
-                    </div>
-                    
-                    <div className="flex items-center gap-3 mt-auto pt-4 border-t border-border opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <button 
+                    <CardFooter className="pt-3 border-t bg-muted/5 opacity-0 group-hover:opacity-100 transition-opacity gap-3">
+                        <Button 
+                            className="flex-1 gap-2" 
+                            variant="default"
                             onClick={() => setActiveView(ViewMode.DATA)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium py-2 px-4 rounded-md transition-colors shadow-sm"
                         >
                             <Pencil size={14} /> Edit
-                        </button>
-                        <button 
-                             className="flex-1 flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 text-sm font-medium py-2 px-4 rounded-md transition-colors"
+                        </Button>
+                        <Button 
+                             className="flex-1 gap-2" 
+                             variant="secondary"
                         >
                             <Database size={14} /> View
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </CardFooter>
+                </Card>
             ))}
         </div>
       </div>

@@ -7,36 +7,41 @@ import {
   Plus, 
   ExternalLink
 } from 'lucide-react';
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Button } from "../../../components/ui/button";
 
 // --- Reusable UI Components for the Panel ---
 
 const FxButton = ({ active = false }: { active?: boolean }) => (
-  <button 
-    className={`ml-auto p-0.5 rounded text-[10px] font-mono font-medium transition-colors ${
+  <Button 
+    variant="ghost"
+    size="sm"
+    className={`ml-auto h-5 px-1 text-[10px] font-mono font-medium ${
         active 
-        ? 'text-primary hover:text-primary/80' 
-        : 'text-muted-foreground hover:text-foreground'
+        ? 'text-primary' 
+        : 'text-muted-foreground'
     }`}
     title="Toggle Dynamic Value"
   >
     Fx
-  </button>
+  </Button>
 );
 
 const ControlHeader = ({ label, fx = true }: { label: string, fx?: boolean }) => (
   <div className="flex items-center justify-between mb-2">
-    <label className="text-[11px] text-muted-foreground font-medium">{label}</label>
+    <Label className="text-[11px] text-muted-foreground font-medium">{label}</Label>
     {fx && <FxButton />}
   </div>
 );
 
 const InputControl = ({ value, placeholder, className = "" }: { value?: string, placeholder?: string, className?: string }) => (
   <div className={`relative ${className}`}>
-    <input 
+    <Input 
         type="text" 
         defaultValue={value} 
         placeholder={placeholder}
-        className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-8 text-xs"
     />
   </div>
 );
@@ -45,7 +50,7 @@ const ToggleControl = ({ label, checked = false }: { label: string, checked?: bo
     const [isChecked, setIsChecked] = useState(checked);
     return (
         <div className="flex items-center justify-between mb-3">
-            <label className="text-[11px] text-muted-foreground font-medium">{label}</label>
+            <Label className="text-[11px] text-muted-foreground font-medium cursor-pointer" onClick={() => setIsChecked(!isChecked)}>{label}</Label>
             <div className="flex items-center gap-2">
                 <FxButton />
                 <button 
@@ -78,20 +83,21 @@ const Accordion = ({ title, children, defaultOpen = true, icon: Icon }: { title:
 
   return (
     <div className="border-b border-border">
-      <button 
+      <Button 
+        variant="ghost"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors group"
+        className="w-full flex items-center justify-between px-4 py-6 h-auto hover:bg-muted/50 rounded-none"
       >
         <div className="flex items-center gap-2">
             {Icon && <Icon size={14} className="text-muted-foreground" />}
             <span className="text-xs font-semibold text-foreground capitalize">{title}</span>
         </div>
         {isOpen ? (
-            <ChevronDown size={14} className="text-muted-foreground group-hover:text-foreground" />
+            <ChevronDown size={14} className="text-muted-foreground" />
         ) : (
-            <ChevronRight size={14} className="text-muted-foreground group-hover:text-foreground" />
+            <ChevronRight size={14} className="text-muted-foreground" />
         )}
-      </button>
+      </Button>
       {isOpen && (
         <div className="px-4 pb-4 pt-1 animate-in slide-in-from-top-1 duration-200">
           {children}
@@ -118,15 +124,15 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ width }) => {
       <div className="p-4 border-b border-border bg-card shrink-0">
          <div className="flex items-center gap-2 mb-4">
             <div className="flex-1 relative">
-                <input 
+                <Input 
                     type="text" 
                     defaultValue="textinput1" 
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm font-medium shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-9 font-medium"
                 />
             </div>
-            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors">
-                <MoreVertical size={16} />
-            </button>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+                <MoreVertical size={16} className="text-muted-foreground" />
+            </Button>
          </div>
 
          {/* Tabs */}
@@ -181,9 +187,9 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ width }) => {
                         <Info size={16} className="text-muted-foreground mb-2" />
                         <span className="text-xs text-muted-foreground">No event handlers attached</span>
                     </div>
-                    <button className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 gap-2">
+                    <Button variant="outline" size="sm" className="w-full h-8 gap-2 text-xs">
                         <Plus size={14} /> New event handler
-                    </button>
+                    </Button>
                 </Accordion>
 
                 <Accordion title="Validation">
@@ -255,7 +261,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ width }) => {
                         <div className="mb-4">
                             <ControlHeader label="Border Radius" fx={true} />
                             <div className="flex items-center gap-2 relative">
-                                <input type="number" defaultValue={6} className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring" />
+                                <Input type="number" defaultValue={6} className="h-8 text-xs" />
                                 <span className="text-[10px] text-muted-foreground absolute right-3 pointer-events-none">px</span>
                             </div>
                         </div>

@@ -2,6 +2,8 @@ import React from 'react';
 import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
 import { ViewMode } from '../../types';
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 interface HeaderProps {
   activeView: ViewMode;
@@ -32,30 +34,32 @@ const Header: React.FC<HeaderProps> = ({ activeView, isDarkMode, toggleTheme }) 
       </div>
 
       {/* Right: Tools & Profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Search */}
-        <div className="hidden md:flex items-center bg-muted/50 rounded-md px-3 py-1.5 w-64 border border-input focus-within:border-ring focus-within:ring-1 focus-within:ring-ring/20 transition-all group">
-          <SearchIcon size={14} className="text-muted-foreground group-focus-within:text-foreground mr-2" />
-          <input 
-            className="bg-transparent border-none outline-none text-xs w-full text-foreground placeholder:text-muted-foreground" 
+        <div className="hidden md:flex items-center w-64 mr-2 relative">
+          <SearchIcon size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input 
+            className="h-8 pl-8 text-xs bg-muted/50 border-input" 
             placeholder="Search... (⌘K)" 
           />
         </div>
 
-        <button className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-md hover:bg-accent hover:text-accent-foreground">
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
           <HelpCircle size={18} />
-        </button>
+        </Button>
 
-        <button className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-md hover:bg-accent hover:text-accent-foreground">
+        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-foreground">
           <Bell size={18} />
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="ghost" 
+          size="icon"
           onClick={toggleTheme}
-          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground"
         >
           {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        </Button>
 
         <div className="h-5 w-px bg-border mx-1"></div>
 

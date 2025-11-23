@@ -1,6 +1,7 @@
 import React from 'react';
 import { Home, LayoutGrid, Database, Settings } from 'lucide-react';
 import { ViewMode } from '../../types';
+import { Button } from "../ui/button";
 
 interface ActivityBarProps {
   activeView: ViewMode;
@@ -17,23 +18,27 @@ const ActivityBar: React.FC<ActivityBarProps> = ({ activeView, setActiveView }) 
   return (
     <div className="w-14 flex flex-col items-center py-4 bg-muted/40 border-r border-border text-muted-foreground z-20 select-none transition-colors">
       {icons.map((item) => (
-        <div
+        <Button
           key={item.id}
           title={item.label}
           onClick={() => setActiveView(item.id)}
-          className={`group w-10 h-10 mb-4 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-all relative hover:bg-accent hover:text-accent-foreground ${
-            activeView === item.id ? 'bg-accent text-primary shadow-sm' : 'text-muted-foreground'
-          }`}
+          variant={activeView === item.id ? "secondary" : "ghost"}
+          size="icon"
+          className={`mb-4 w-10 h-10 ${activeView === item.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <item.icon size={20} strokeWidth={1.5} />
-        </div>
+        </Button>
       ))}
       
       <div className="flex-1" />
       
-      <div className="w-10 h-10 flex items-center justify-center mb-2 cursor-pointer text-muted-foreground hover:text-accent-foreground rounded-lg hover:bg-accent transition-colors">
+      <Button 
+        variant="ghost" 
+        size="icon"
+        className="w-10 h-10 mb-2 text-muted-foreground hover:text-foreground"
+      >
         <Settings size={20} strokeWidth={1.5} />
-      </div>
+      </Button>
     </div>
   );
 };

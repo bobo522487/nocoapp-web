@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, File as FileIcon, Folder as FolderIcon, Fold
 import { FileSystemNode, FileType, ViewMode } from '../../types';
 import PagesPanel from '../../features/app-builder/components/PagesPanel';
 import TablePanel from '../../features/data-modeler/components/TablePanel';
+import { useAppStore } from '../../store/useAppStore';
 
 // --- File Tree Component (Used in other views if needed) ---
 interface FileTreeProps {
@@ -66,7 +67,6 @@ const FileTree: React.FC<FileTreeProps> = ({ node, depth, onToggleFolder, onSele
 
 // --- Main Sidebar Container ---
 interface SidebarProps {
-  activeView: ViewMode;
   files: FileSystemNode[];
   onToggleFolder: (id: string) => void;
   onSelectFile: (node: FileSystemNode) => void;
@@ -78,7 +78,6 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
-  activeView, 
   files, 
   onToggleFolder, 
   onSelectFile, 
@@ -87,6 +86,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeTable,
   onTableSelect
 }) => {
+  const { activeView } = useAppStore();
   
   const renderContent = () => {
     switch (activeView) {

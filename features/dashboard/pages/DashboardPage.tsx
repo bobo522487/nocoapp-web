@@ -5,12 +5,11 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Separator } from "../../../components/ui/separator";
+import { useAppStore } from '../../../store/useAppStore';
 
-interface DashboardPageProps {
-  setActiveView: (view: ViewMode) => void;
-}
+const DashboardPage: React.FC = () => {
+  const { setActiveView } = useAppStore();
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveView }) => {
   // Mock Data
   const apps = [
     {

@@ -2,13 +2,11 @@ import React from 'react';
 import { Home, LayoutGrid, Database, Settings } from 'lucide-react';
 import { ViewMode } from '../../types';
 import { Button } from "../ui/button";
+import { useAppStore } from '../../store/useAppStore';
 
-interface ActivityBarProps {
-  activeView: ViewMode;
-  setActiveView: (view: ViewMode) => void;
-}
+const ActivityBar: React.FC = () => {
+  const { activeView, setActiveView } = useAppStore();
 
-const ActivityBar: React.FC<ActivityBarProps> = ({ activeView, setActiveView }) => {
   const icons = [
     { id: ViewMode.HOME, icon: Home, label: '首页' },
     { id: ViewMode.APPS, icon: LayoutGrid, label: '应用' },

@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import Dropdown from './Dropdown';
 import { LayoutGrid, Database, Table, Plus, Box, File } from 'lucide-react';
 import { ViewMode } from '../../types';
+import { useAppStore } from '../../store/useAppStore';
 
-interface BreadcrumbProps {
-  activeView: ViewMode;
-}
+const Breadcrumb: React.FC = () => {
+  const { activeView } = useAppStore();
 
-const Breadcrumb: React.FC<BreadcrumbProps> = ({ activeView }) => {
   // --- State ---
   const [selectedOrg, setSelectedOrg] = useState({ id: 'org-1', label: "bobo's Org" });
 

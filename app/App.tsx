@@ -9,6 +9,7 @@ import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import { INITIAL_FILES } from '../constants';
 import { FileSystemNode, FileType, ViewMode, Tab } from '../types';
 import { useResizable } from '../hooks/useResizable';
+import { useAppStore } from '../store/useAppStore';
 import { 
   DndContext, 
   DragOverlay, 
@@ -20,12 +21,13 @@ import {
 } from '@dnd-kit/core';
 
 const App: React.FC = () => {
-  // State
+  // State from Zustand Store
+  const { activeView, isDarkMode } = useAppStore();
+
+  // Local State
   const [files, setFiles] = useState<FileSystemNode[]>(INITIAL_FILES);
-  const [activeView, setActiveView] = useState<ViewMode>(ViewMode.HOME); // Default to HOME
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [tabs, setTabs] = useState<Tab[]>([]);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   
   // Data View State
   const [activeTable, setActiveTable] = useState<string>('users');
@@ -55,7 +57,7 @@ const App: React.FC = () => {
     leftOffset: 56 // Width of ActivityBar
   });
 
-  // Initialize Theme
+  // Initialize Theme (using store value)
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -63,8 +65,6 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // Helper to find node by ID (recursive)
   const findNode = useCallback((nodes: FileSystemNode[], id: string): FileSystemNode | null => {
@@ -170,21 +170,16 @@ const App: React.FC = () => {
     >
       <div className={`flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 ${isResizingSidebar ? 'cursor-col-resize select-none' : ''}`}>
         
-        <Header 
-          activeView={activeView} 
-          isDarkMode={isDarkMode} 
-          toggleTheme={toggleTheme} 
-        />
+        <Header />
 
         {/* Main Layout */}
         <div className="flex-1 flex overflow-hidden">
-          <ActivityBar activeView={activeView} setActiveView={setActiveView} />
+          <ActivityBar />
           
           {/* Sidebar and Resizer - Hidden on Home View */}
           {activeView !== ViewMode.HOME && (
             <>
               <Sidebar 
-                  activeView={activeView} 
                   files={files} 
                   onToggleFolder={handleToggleFolder} 
                   onSelectFile={handleSelectFile}
@@ -207,7 +202,7 @@ const App: React.FC = () => {
           {/* Content Area */}
           <main className="flex-1 flex overflow-hidden relative bg-background min-w-0">
               {activeView === ViewMode.HOME ? (
-                  <DashboardPage setActiveView={setActiveView} />
+                  <DashboardPage />
               ) : activeView === ViewMode.APPS ? (
                   <AppBuilderPage 
                     droppedItem={droppedItem} 

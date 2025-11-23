@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WidthProvider, Responsive } from "react-grid-layout";
-import { GripVertical, BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Type, MousePointerClick } from 'lucide-react';
+import { GripVertical, BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Type, MousePointerClick, Copy, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -10,13 +10,7 @@ import { useDroppable } from '@dnd-kit/core';
 // Wrap ResponsiveGridLayout with WidthProvider to handle window resizing automatically
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-interface CanvasProps {
-  device?: 'desktop' | 'tablet' | 'mobile';
-  droppedItem?: any;
-  onItemConsumed?: () => void;
-}
-
-interface GridItemData {
+export interface GridItemData {
   i: string;
   x: number;
   y: number;
@@ -29,17 +23,15 @@ interface GridItemData {
   content?: any;
 }
 
-// Initial Layout Data
-const INITIAL_LAYOUT: GridItemData[] = [
-  { i: 'stat1', x: 0, y: 0, w: 3, h: 3, type: 'stat', title: 'Total Revenue', content: { value: '$45,231.89', trend: '+20.1%', icon: DollarSign } },
-  { i: 'stat2', x: 3, y: 0, w: 3, h: 3, type: 'stat', title: 'Subscriptions', content: { value: '+2350', trend: '+180.1%', icon: Users } },
-  { i: 'stat3', x: 6, y: 0, w: 3, h: 3, type: 'stat', title: 'Sales', content: { value: '+12,234', trend: '+19%', icon: TrendingUp } },
-  { i: 'chart1', x: 0, y: 3, w: 8, h: 8, type: 'chart', title: 'Revenue Overview', content: {} },
-  { i: 'list1', x: 8, y: 3, w: 4, h: 8, type: 'table', title: 'Recent Sales', content: {} },
-];
+interface CanvasProps {
+  device?: 'desktop' | 'tablet' | 'mobile';
+  droppedItem?: any;
+  onItemConsumed?: () => void;
+  layout: GridItemData[];
+  onLayoutChange: (layout: GridItemData[]) => void;
+}
 
-const Canvas: React.FC<CanvasProps> = ({ device = 'desktop', droppedItem, onItemConsumed }) => {
-  const [layout, setLayout] = useState<GridItemData[]>(INITIAL_LAYOUT);
+const Canvas: React.FC<CanvasProps> = ({ device = 'desktop', droppedItem, onItemConsumed, layout, onLayoutChange }) => {
   const [mounted, setMounted] = useState(false);
 
   // Setup Droppable
@@ -77,10 +69,32 @@ const Canvas: React.FC<CanvasProps> = ({ device = 'desktop', droppedItem, onItem
         newItem.title = 'Button';
       }
 
-      setLayout(prev => [...prev, newItem]);
+      onLayoutChange([...layout, newItem]);
       onItemConsumed();
     }
-  }, [droppedItem, onItemConsumed]);
+  }, [droppedItem, onItemConsumed, layout, onLayoutChange]);
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const newLayout = layout.filter(item => item.i !== id);
+    onLayoutChange(newLayout);
+  };
+
+  const handleDuplicate = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const item = layout.find(l => l.i === id);
+    if (item) {
+       const newItem = {
+         ...item,
+         i: `${item.type}-${Date.now()}`,
+         y: Infinity, // Let grid layout handle placement
+         x: item.x
+       };
+       onLayoutChange([...layout, newItem]);
+    }
+  };
 
   const getContainerWidth = () => {
     switch(device) {
@@ -237,14 +251,40 @@ const Canvas: React.FC<CanvasProps> = ({ device = 'desktop', droppedItem, onItem
                     isResizable={true}
                     draggableHandle=".drag-handle"
                     onLayoutChange={(currentLayout) => {
-                        // In a real app, layout changes would be persisted here
+                       // Update local layout state if needed, but here we just defer to parent via prop if we wanted strict control.
+                       // React-Grid-Layout manages internal state, but we should sync back to parent for persistence.
+                       // However, calling onLayoutChange on every drag/resize frame can be expensive. 
+                       // For this demo, we'll assume the parent updates the `layout` prop when we drop new items,
+                       // and RGL handles the immediate visual feedback. 
+                       // Ideally, use onDragStop/onResizeStop to sync final positions.
                     }}
+                    onDragStop={(layout) => onLayoutChange(layout as GridItemData[])}
+                    onResizeStop={(layout) => onLayoutChange(layout as GridItemData[])}
                 >
                     {layout.map((item) => (
                         <div key={item.i} className="bg-card border border-border rounded-lg shadow-sm hover:shadow-md hover:border-primary/50 transition-all group overflow-hidden">
-                            {/* Drag Handle Overlay (Visible on Hover) */}
-                            <div className="drag-handle absolute top-2 right-2 z-50 p-1 rounded-sm cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 hover:bg-muted transition-opacity bg-background/80 backdrop-blur-sm border border-border">
-                                <GripVertical size={14} className="text-muted-foreground" />
+                            {/* Controls Overlay (Visible on Hover) */}
+                            <div className="absolute top-2 right-2 z-50 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {/* Copy */}
+                                <div 
+                                    onClick={(e) => handleDuplicate(e, item.i)} 
+                                    className="p-1 rounded-sm cursor-pointer hover:bg-muted bg-background/80 border border-border backdrop-blur-sm"
+                                    title="Duplicate"
+                                >
+                                    <Copy size={14} className="text-muted-foreground hover:text-foreground" />
+                                </div>
+                                {/* Delete */}
+                                <div 
+                                    onClick={(e) => handleDelete(e, item.i)} 
+                                    className="p-1 rounded-sm cursor-pointer hover:bg-muted bg-background/80 border border-border backdrop-blur-sm"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                                </div>
+                                {/* Drag Handle */}
+                                <div className="drag-handle p-1 rounded-sm cursor-grab active:cursor-grabbing hover:bg-muted bg-background/80 border border-border backdrop-blur-sm">
+                                    <GripVertical size={14} className="text-muted-foreground" />
+                                </div>
                             </div>
 
                             {/* Widget Content */}

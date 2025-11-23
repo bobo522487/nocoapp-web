@@ -19,7 +19,8 @@
     "react-grid-layout": "^1.4.4",
     "lodash": "^4.17.21",
     "@dnd-kit/core": "6.1.0",
-    "@dnd-kit/utilities": "3.2.2"
+    "@dnd-kit/utilities": "3.2.2",
+    "zustand": "5.0.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

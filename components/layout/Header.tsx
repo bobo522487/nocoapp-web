@@ -1,17 +1,13 @@
 import React from 'react';
 import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
-import { ViewMode } from '../../types';
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useAppStore } from '../../store/useAppStore';
 
-interface HeaderProps {
-  activeView: ViewMode;
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-}
+const Header: React.FC = () => {
+  const { activeView, isDarkMode, toggleTheme } = useAppStore();
 
-const Header: React.FC<HeaderProps> = ({ activeView, isDarkMode, toggleTheme }) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
@@ -31,7 +27,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, isDarkMode, toggleTheme }) 
           <div className="h-5 w-px bg-border"></div>
 
           {/* Breadcrumb */}
-          <Breadcrumb activeView={activeView} />
+          <Breadcrumb />
         </div>
 
         {/* Right: Tools & Profile */}

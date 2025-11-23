@@ -1,15 +1,18 @@
+
 import React, { useState } from 'react';
 import Canvas, { GridItemData } from '../components/Canvas';
 import PropertyPanel from '../components/PropertyPanel';
 import { useResizable } from '../../../hooks/useResizable';
 import { Button } from "../../../components/ui/button";
-import { Undo2, Redo2, Monitor, Tablet, Smartphone, Save, Play, Rocket, MousePointer2, Hand, Trash2, Users, TrendingUp, DollarSign } from 'lucide-react';
+import { Undo2, Redo2, Monitor, Tablet, Smartphone, Save, Play, Rocket, MousePointer2, Hand, Trash2 } from 'lucide-react';
+import { useAppStore } from '../../../store/useAppStore';
+import { Page } from '../../../types';
 
 // Initial Layout Data
 const INITIAL_LAYOUT: GridItemData[] = [
-  { i: 'stat1', x: 0, y: 0, w: 3, h: 3, type: 'stat', title: 'Total Revenue', content: { value: '$45,231.89', trend: '+20.1%', icon: DollarSign } },
-  { i: 'stat2', x: 3, y: 0, w: 3, h: 3, type: 'stat', title: 'Subscriptions', content: { value: '+2350', trend: '+180.1%', icon: Users } },
-  { i: 'stat3', x: 6, y: 0, w: 3, h: 3, type: 'stat', title: 'Sales', content: { value: '+12,234', trend: '+19%', icon: TrendingUp } },
+  { i: 'stat1', x: 0, y: 0, w: 3, h: 3, type: 'stat', title: 'Total Revenue', content: { value: '$45,231.89', trend: '+20.1%' } },
+  { i: 'stat2', x: 3, y: 0, w: 3, h: 3, type: 'stat', title: 'Subscriptions', content: { value: '+2350', trend: '+180.1%' } },
+  { i: 'stat3', x: 6, y: 0, w: 3, h: 3, type: 'stat', title: 'Sales', content: { value: '+12,234', trend: '+19%' } },
   { i: 'chart1', x: 0, y: 3, w: 8, h: 8, type: 'chart', title: 'Revenue Overview', content: {} },
   { i: 'list1', x: 8, y: 3, w: 4, h: 8, type: 'table', title: 'Recent Sales', content: {} },
 ];
@@ -18,9 +21,10 @@ interface AppToolbarProps {
   device: 'desktop' | 'tablet' | 'mobile';
   setDevice: (device: 'desktop' | 'tablet' | 'mobile') => void;
   onClearCanvas: () => void;
+  pageName: string;
 }
 
-const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanvas }) => {
+const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanvas, pageName }) => {
   const [mode, setMode] = useState<'edit' | 'move'>('edit');
 
   return (
@@ -51,15 +55,7 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanva
 
             <div className="w-px h-6 bg-border"></div>
 
-            {/* History */}
-            <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Undo">
-                    <Undo2 size={16} />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Redo">
-                    <Redo2 size={16} />
-                </Button>
-            </div>
+            <span className="text-sm font-medium text-muted-foreground">{pageName}</span>
         </div>
 
         {/* Center: Device Switcher */}
@@ -95,6 +91,14 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanva
 
         {/* Right: Main Actions */}
         <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 mr-2">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Undo">
+                    <Undo2 size={16} />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Redo">
+                    <Redo2 size={16} />
+                </Button>
+            </div>
             <Button variant="ghost" size="sm" onClick={onClearCanvas} className="gap-2 h-8 text-muted-foreground hover:text-destructive transition-colors">
                 <Trash2 size={14} /> Clear
             </Button>
@@ -113,14 +117,20 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanva
 };
 
 interface AppBuilderPageProps {
+  draggedItem?: any;
   droppedItem?: any;
   onItemConsumed?: () => void;
 }
 
-const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ droppedItem, onItemConsumed }) => {
+const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedItem, onItemConsumed }) => {
+  const { pages, activePageId, updatePage } = useAppStore();
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [layout, setLayout] = useState<GridItemData[]>(INITIAL_LAYOUT);
-  
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Derived active page
+  const activePage = pages.find(p => p.id === activePageId);
+
   const { width, startResizing } = useResizable({
     initialWidth: 260,
     minWidth: 240,
@@ -129,22 +139,42 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ droppedItem, onItemCons
   });
 
   const handleClearCanvas = () => {
-    if (window.confirm("Are you sure you want to clear the canvas? This action cannot be undone.")) {
-        setLayout([]);
-    }
+    // Immediate clear without confirmation dialog to avoid blocking UI events
+    setLayout([]);
+    setSelectedItemId(null);
   };
+
+  const handleUpdateItem = (id: string, updates: Partial<GridItemData>) => {
+      setLayout(prev => prev.map(item => item.i === id ? { ...item, ...updates } : item));
+  };
+
+  const handlePageUpdate = (updates: Partial<Page>) => {
+      if (activePageId) {
+          updatePage(activePageId, updates);
+      }
+  };
+
+  const selectedItem = layout.find(i => i.i === selectedItemId);
 
   return (
     <>
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
-          <AppToolbar device={device} setDevice={setDevice} onClearCanvas={handleClearCanvas} />
+          <AppToolbar 
+            device={device} 
+            setDevice={setDevice} 
+            onClearCanvas={handleClearCanvas} 
+            pageName={activePage?.name || 'Page'}
+          />
           <div className="flex-1 flex overflow-hidden relative">
              <Canvas 
                device={device} 
+               draggedItem={draggedItem}
                droppedItem={droppedItem}
                onItemConsumed={onItemConsumed}
                layout={layout}
                onLayoutChange={setLayout}
+               selectedItemId={selectedItemId}
+               onSelectItem={setSelectedItemId}
              />
           </div>
       </div>
@@ -157,7 +187,13 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ droppedItem, onItemCons
         <div className="absolute inset-y-0 -left-1 w-3 cursor-col-resize z-50" />
       </div>
 
-      <PropertyPanel width={width} />
+      <PropertyPanel 
+        width={width} 
+        selectedItem={selectedItem} 
+        onUpdate={handleUpdateItem}
+        pageSettings={activePage}
+        onPageUpdate={handlePageUpdate}
+      />
     </>
   );
 };

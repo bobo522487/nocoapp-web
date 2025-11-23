@@ -1,3 +1,4 @@
+
 export enum FileType {
   FILE = 'FILE',
   FOLDER = 'FOLDER'
@@ -31,4 +32,14 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   text: string;
+}
+
+export interface Page {
+  id: string;
+  name: string;
+  icon: string; // Icon name string
+  isHome: boolean;
+  isHidden: boolean;
+  isDisabled: boolean;
+  height: string;
 }

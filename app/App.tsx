@@ -9,6 +9,15 @@ import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import { INITIAL_FILES } from '../constants';
 import { FileSystemNode, FileType, ViewMode, Tab } from '../types';
 import { useResizable } from '../hooks/useResizable';
+import { 
+  DndContext, 
+  DragOverlay, 
+  useSensor, 
+  useSensors, 
+  PointerSensor, 
+  DragStartEvent, 
+  DragEndEvent 
+} from '@dnd-kit/core';
 
 const App: React.FC = () => {
   // State
@@ -20,6 +29,18 @@ const App: React.FC = () => {
   
   // Data View State
   const [activeTable, setActiveTable] = useState<string>('users');
+
+  // Drag and Drop State
+  const [draggedItem, setDraggedItem] = useState<any>(null);
+  const [droppedItem, setDroppedItem] = useState<any>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
 
   // Use custom hook for Left Sidebar Resizing
   const { 
@@ -117,69 +138,110 @@ const App: React.FC = () => {
     }
   };
 
+  // DnD Handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    setDraggedItem(event.active.data.current);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && over.id === 'canvas-droppable') {
+      // Pass the dropped data to the active view (AppBuilderPage -> Canvas)
+      setDroppedItem({
+        ...active.data.current,
+        id: `widget-${Date.now()}` // Generate a unique ID for the new instance
+      });
+    }
+
+    setDraggedItem(null);
+  };
+
   // Derived state for editor
   const activeTab = tabs.find(t => t.id === activeTabId);
   const activeFileNode = activeTab ? findNode(files, activeTab.fileId) : null;
   const activeContent = activeFileNode?.content || '';
 
   return (
-    <div className={`flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 ${isResizingSidebar ? 'cursor-col-resize select-none' : ''}`}>
-      
-      <Header 
-        activeView={activeView} 
-        isDarkMode={isDarkMode} 
-        toggleTheme={toggleTheme} 
-      />
+    <DndContext 
+      sensors={sensors}
+      onDragStart={handleDragStart} 
+      onDragEnd={handleDragEnd}
+    >
+      <div className={`flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 ${isResizingSidebar ? 'cursor-col-resize select-none' : ''}`}>
+        
+        <Header 
+          activeView={activeView} 
+          isDarkMode={isDarkMode} 
+          toggleTheme={toggleTheme} 
+        />
 
-      {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        <ActivityBar activeView={activeView} setActiveView={setActiveView} />
-        
-        {/* Sidebar and Resizer - Hidden on Home View */}
-        {activeView !== ViewMode.HOME && (
-          <>
-            <Sidebar 
-                activeView={activeView} 
-                files={files} 
-                onToggleFolder={handleToggleFolder} 
-                onSelectFile={handleSelectFile}
-                selectedFileId={activeTab?.fileId || null}
-                width={sidebarWidth}
-                activeTable={activeTable}
-                onTableSelect={setActiveTable}
-            />
-            {/* Sidebar Resizer */}
-            <div
-                className="w-[1px] bg-border hover:bg-primary cursor-col-resize z-50 relative transition-colors"
-                onMouseDown={startResizingSidebar}
-            >
-               {/* Invisible Hit Area */}
-               <div className="absolute inset-y-0 -left-1 w-3 cursor-col-resize z-50" />
+        {/* Main Layout */}
+        <div className="flex-1 flex overflow-hidden">
+          <ActivityBar activeView={activeView} setActiveView={setActiveView} />
+          
+          {/* Sidebar and Resizer - Hidden on Home View */}
+          {activeView !== ViewMode.HOME && (
+            <>
+              <Sidebar 
+                  activeView={activeView} 
+                  files={files} 
+                  onToggleFolder={handleToggleFolder} 
+                  onSelectFile={handleSelectFile}
+                  selectedFileId={activeTab?.fileId || null}
+                  width={sidebarWidth}
+                  activeTable={activeTable}
+                  onTableSelect={setActiveTable}
+              />
+              {/* Sidebar Resizer */}
+              <div
+                  className="w-[1px] bg-border hover:bg-primary cursor-col-resize z-50 relative transition-colors"
+                  onMouseDown={startResizingSidebar}
+              >
+                 {/* Invisible Hit Area */}
+                 <div className="absolute inset-y-0 -left-1 w-3 cursor-col-resize z-50" />
+              </div>
+            </>
+          )}
+          
+          {/* Content Area */}
+          <main className="flex-1 flex overflow-hidden relative bg-background min-w-0">
+              {activeView === ViewMode.HOME ? (
+                  <DashboardPage setActiveView={setActiveView} />
+              ) : activeView === ViewMode.APPS ? (
+                  <AppBuilderPage 
+                    droppedItem={droppedItem} 
+                    onItemConsumed={() => setDroppedItem(null)}
+                  />
+              ) : activeView === ViewMode.DATA ? (
+                  <DataPage tableName={activeTable} />
+              ) : (
+                  <Editor 
+                      tabs={tabs}
+                      activeTabId={activeTabId}
+                      activeFileContent={activeContent}
+                      onCloseTab={handleCloseTab}
+                      onSelectTab={setActiveTabId}
+                      onContentChange={handleContentChange}
+                  />
+              )}
+          </main>
+        </div>
+
+        {/* Drag Overlay for Visual Feedback */}
+        <DragOverlay>
+          {draggedItem ? (
+            <div className="opacity-80 pointer-events-none transform scale-105 cursor-grabbing">
+               <div className="flex flex-col items-center justify-center p-2 rounded-md border bg-card shadow-xl w-20 h-20">
+                  {draggedItem.icon && <draggedItem.icon size={24} className="text-primary mb-1" />}
+                  <span className="text-[10px] font-medium text-foreground">{draggedItem.name}</span>
+               </div>
             </div>
-          </>
-        )}
-        
-        {/* Content Area */}
-        <main className="flex-1 flex overflow-hidden relative bg-background min-w-0">
-            {activeView === ViewMode.HOME ? (
-                <DashboardPage setActiveView={setActiveView} />
-            ) : activeView === ViewMode.APPS ? (
-                <AppBuilderPage />
-            ) : activeView === ViewMode.DATA ? (
-                <DataPage tableName={activeTable} />
-            ) : (
-                <Editor 
-                    tabs={tabs}
-                    activeTabId={activeTabId}
-                    activeFileContent={activeContent}
-                    onCloseTab={handleCloseTab}
-                    onSelectTab={setActiveTabId}
-                    onContentChange={handleContentChange}
-                />
-            )}
-        </main>
+          ) : null}
+        </DragOverlay>
+
       </div>
-    </div>
+    </DndContext>
   );
 };
 

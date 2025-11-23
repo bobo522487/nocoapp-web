@@ -59,150 +59,161 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveView }) => {
   ];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-muted/20 overflow-y-auto p-8 transition-colors">
-      
-      {/* Hero / Welcome Section */}
-      <div className="max-w-6xl mx-auto w-full mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Welcome back, Developer</h1>
-        <p className="text-muted-foreground">Select an application or data source to start building.</p>
+    <div className="flex-1 flex flex-col h-full bg-background overflow-y-auto transition-colors">
+      <div className="container max-w-7xl mx-auto py-10 px-6">
+        
+        {/* Hero / Welcome Section */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Welcome back, Developer</h1>
+          <p className="text-muted-foreground text-lg">Select an application or data source to start building.</p>
+        </div>
+
+        {/* Applications Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                  <div className="p-2 bg-primary/10 rounded-md">
+                    <LayoutGrid className="text-primary" size={20} />
+                  </div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-foreground">Applications</h2>
+              </div>
+              <Button 
+                  onClick={() => setActiveView(ViewMode.APPS)}
+              >
+                  New Application <Plus size={16} className="ml-2" />
+              </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {apps.map(app => (
+                  <Card key={app.id} className="hover:shadow-lg hover:border-primary/50 transition-all duration-300 group flex flex-col bg-card">
+                      <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                              <div className={`w-10 h-10 rounded-lg ${app.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-inset ring-black/5`}>
+                                  <LayoutGrid size={20} className={app.color.replace('bg-', 'text-')} />
+                              </div>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                  <MoreHorizontal size={16} />
+                              </Button>
+                          </div>
+                          <CardTitle 
+                              className="text-xl mt-4 cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => setActiveView(ViewMode.APPS)}
+                          >
+                              {app.name}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-2 mt-2 text-sm leading-relaxed">
+                              {app.description}
+                          </CardDescription>
+                      </CardHeader>
+
+                      <CardContent className="pb-3 flex-1">
+                          <div className="flex items-center gap-2 mt-2">
+                              {app.pages.slice(0, 3).map(page => (
+                                <Badge key={page} variant="secondary" className="text-[10px] font-normal">{page}</Badge>
+                              ))}
+                              {app.pages.length > 3 && <Badge variant="secondary" className="text-[10px] font-normal">+{app.pages.length - 3}</Badge>}
+                          </div>
+                      </CardContent>
+
+                      <CardFooter className="pt-4 border-t bg-muted/30 text-xs text-muted-foreground flex justify-between items-center">
+                          <span>Edited {app.lastEdited}</span>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button 
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2"
+                                  onClick={() => setActiveView(ViewMode.APPS)}
+                              >
+                                  <Pencil size={12} className="mr-1" /> Edit
+                              </Button>
+                              <Button 
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2"
+                              >
+                                  <Play size={12} className="mr-1" /> Launch
+                              </Button>
+                          </div>
+                      </CardFooter>
+                  </Card>
+              ))}
+          </div>
+        </div>
+
+        <Separator className="my-10" />
+
+        {/* Data Sources Section */}
+        <div>
+          <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                  <div className="p-2 bg-primary/10 rounded-md">
+                    <Database className="text-primary" size={20} />
+                  </div>
+                  <h2 className="text-2xl font-semibold tracking-tight text-foreground">Data Sources</h2>
+              </div>
+              <Button 
+                  variant="outline"
+                  onClick={() => setActiveView(ViewMode.DATA)}
+              >
+                  Connect Data <Plus size={16} className="ml-2" />
+              </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dataSources.map(src => (
+                  <Card key={src.id} className="hover:shadow-lg hover:border-primary/50 transition-all duration-300 group flex flex-col bg-card">
+                      <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                              <div className={`w-10 h-10 rounded-lg ${src.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-inset ring-black/5`}>
+                                  <Database size={20} className={src.color.replace('bg-', 'text-')} />
+                              </div>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                  <MoreHorizontal size={16} />
+                              </Button>
+                          </div>
+                          <CardTitle 
+                              className="text-xl mt-4 cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => setActiveView(ViewMode.DATA)}
+                          >
+                              {src.name}
+                          </CardTitle>
+                          <div className="mt-2">
+                              <Badge variant="outline" className="font-mono text-xs">{src.type}</Badge>
+                          </div>
+                      </CardHeader>
+                      
+                      <CardContent className="pb-3 flex-1">
+                          <p className="text-sm text-muted-foreground">
+                              {src.tables.length} tables configured
+                          </p>
+                      </CardContent>
+
+                      <CardFooter className="pt-4 border-t bg-muted/30 text-xs text-muted-foreground flex justify-between items-center">
+                          <span>Edited {src.lastEdited}</span>
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button 
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2"
+                                  onClick={() => setActiveView(ViewMode.DATA)}
+                              >
+                                  <Pencil size={12} className="mr-1" /> Edit
+                              </Button>
+                              <Button 
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2"
+                              >
+                                  <Database size={12} className="mr-1" /> View
+                              </Button>
+                          </div>
+                      </CardFooter>
+                  </Card>
+              ))}
+          </div>
+        </div>
       </div>
-
-      {/* Applications Section */}
-      <div className="max-w-6xl mx-auto w-full mb-12">
-        <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-                <LayoutGrid className="text-muted-foreground" size={20} />
-                <h2 className="text-xl font-semibold text-foreground">Applications</h2>
-            </div>
-            <Button 
-                variant="ghost" 
-                className="gap-2 text-primary hover:text-primary/80"
-                onClick={() => setActiveView(ViewMode.APPS)}
-            >
-                New Application <Plus size={16} />
-            </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {apps.map(app => (
-                <Card key={app.id} className="hover:shadow-md transition-all duration-300 group flex flex-col">
-                    <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                            <div className={`w-10 h-10 rounded-lg ${app.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
-                                <LayoutGrid size={20} className={app.color.replace('bg-', 'text-')} />
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal size={16} />
-                            </Button>
-                        </div>
-                        <CardTitle 
-                            className="text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => setActiveView(ViewMode.APPS)}
-                        >
-                            {app.name}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-2 mt-1.5">
-                            {app.description}
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="pb-3 flex-1">
-                         <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
-                            <span>Edited {app.lastEdited}</span>
-                            <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
-                            <span>{app.pages.length} Pages</span>
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="pt-3 border-t bg-muted/5 opacity-0 group-hover:opacity-100 transition-opacity gap-3">
-                        <Button 
-                            className="flex-1 gap-2" 
-                            variant="default"
-                            onClick={() => setActiveView(ViewMode.APPS)}
-                        >
-                            <Pencil size={14} /> Edit
-                        </Button>
-                        <Button 
-                            className="flex-1 gap-2" 
-                            variant="secondary"
-                        >
-                            <Play size={14} className="opacity-80" /> Launch
-                        </Button>
-                    </CardFooter>
-                </Card>
-            ))}
-        </div>
-      </div>
-
-      <Separator className="my-8 max-w-6xl mx-auto" />
-
-      {/* Data Sources Section */}
-      <div className="max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-                <Database className="text-muted-foreground" size={20} />
-                <h2 className="text-xl font-semibold text-foreground">Data Sources</h2>
-            </div>
-            <Button 
-                variant="ghost" 
-                className="gap-2 text-primary hover:text-primary/80"
-                onClick={() => setActiveView(ViewMode.DATA)}
-            >
-                Connect Data <Plus size={16} />
-            </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dataSources.map(src => (
-                <Card key={src.id} className="hover:shadow-md transition-all duration-300 group flex flex-col">
-                    <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                             <div className={`w-10 h-10 rounded-lg ${src.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-black/5`}>
-                                <Database size={20} className={src.color.replace('bg-', 'text-')} />
-                             </div>
-                             <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreHorizontal size={16} />
-                            </Button>
-                        </div>
-                        <CardTitle 
-                             className="text-lg mt-3 cursor-pointer hover:text-primary transition-colors"
-                             onClick={() => setActiveView(ViewMode.DATA)}
-                        >
-                            {src.name}
-                        </CardTitle>
-                        <div className="mt-2">
-                            <Badge variant="secondary" className="font-normal">{src.type}</Badge>
-                        </div>
-                    </CardHeader>
-                    
-                    <CardContent className="pb-3 flex-1">
-                        <div className="text-xs text-muted-foreground font-medium flex items-center gap-2">
-                            <span>Edited {src.lastEdited}</span>
-                             <span className="w-1 h-1 rounded-full bg-muted-foreground/50"></span>
-                            <span>{src.tables.length} Tables</span>
-                        </div>
-                    </CardContent>
-
-                    <CardFooter className="pt-3 border-t bg-muted/5 opacity-0 group-hover:opacity-100 transition-opacity gap-3">
-                        <Button 
-                            className="flex-1 gap-2" 
-                            variant="default"
-                            onClick={() => setActiveView(ViewMode.DATA)}
-                        >
-                            <Pencil size={14} /> Edit
-                        </Button>
-                        <Button 
-                             className="flex-1 gap-2" 
-                             variant="secondary"
-                        >
-                            <Database size={14} /> View
-                        </Button>
-                    </CardFooter>
-                </Card>
-            ))}
-        </div>
-      </div>
-
     </div>
   );
 };

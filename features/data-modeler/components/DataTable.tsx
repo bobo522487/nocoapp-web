@@ -106,7 +106,7 @@ const DataTable = <T extends { [key: string]: any }>({
   return (
     <div className="w-full min-w-[800px] border-b border-border">
       <Table>
-        <TableHeader className="sticky top-0 bg-secondary/90 z-10 backdrop-blur-sm">
+        <TableHeader className="sticky top-0 bg-background z-10 backdrop-blur-sm">
           <TableRow className="hover:bg-transparent border-border">
             {enableSelection && (
               <TableHead className="w-10 px-3 text-center">
@@ -186,7 +186,7 @@ const DataTable = <T extends { [key: string]: any }>({
                                 onChange={(e) => setEditValue(e.target.value)}
                                 onBlur={handleSaveEdit}
                                 onKeyDown={handleKeyDown}
-                                className="absolute inset-0 w-full h-full z-20 bg-background border-2 border-primary outline-none text-xs px-2"
+                                className="absolute inset-0 w-full h-full z-20 bg-background text-foreground border-2 border-primary outline-none text-xs px-2"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {col.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -199,14 +199,14 @@ const DataTable = <T extends { [key: string]: any }>({
                                 onChange={(e) => setEditValue(e.target.value)}
                                 onBlur={handleSaveEdit}
                                 onKeyDown={handleKeyDown}
-                                className="absolute inset-0 w-full h-full z-20 bg-background border-2 border-primary outline-none text-xs px-2"
+                                className="absolute inset-0 w-full h-full z-20 bg-background text-foreground border-2 border-primary outline-none text-xs px-2"
                                 onClick={(e) => e.stopPropagation()}
                             />
                         )
                       ) : (
                         <div className="w-full h-full px-3 flex items-center truncate">
                             {col.renderCell ? col.renderCell(row, value) : (
-                                <span className="truncate">{value}</span>
+                                <span className="truncate text-foreground">{value}</span>
                             )}
                         </div>
                       )}

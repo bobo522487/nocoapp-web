@@ -375,7 +375,7 @@ const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
           type: 'select',
           options: ['text', 'number', 'email', 'select', 'status', 'date', 'boolean'],
           renderCell: (row) => (
-             <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground">
+             <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground bg-muted/40">
                  {row.type}
              </Badge>
           )
@@ -451,20 +451,22 @@ const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
           if (field.type === 'status') {
                const variant = value === 'Active' || value === 'Completed' ? 'default' :
                                value === 'Inactive' || value === 'Damage' ? 'destructive' : 'secondary';
+               // If it is secondary (gray), make sure text is readable in dark mode
+               const className = variant === 'secondary' ? "text-foreground bg-muted" : "";
                return (
-                   <Badge variant={variant} className="text-[10px] h-5 px-1.5 font-normal">
+                   <Badge variant={variant} className={`text-[10px] h-5 px-1.5 font-normal ${className}`}>
                         {value}
                     </Badge>
                );
           }
           if (field.type === 'select' && field.id === 'role') {
               return (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-muted/50">
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-muted/30 text-foreground">
                     {value}
                   </Badge>
               );
           }
-          return <span className="truncate">{value}</span>;
+          return <span className="truncate text-foreground">{value}</span>;
       }
   }));
 
@@ -500,7 +502,7 @@ const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
         {viewMode === 'DATA' && (
             <div className="ml-auto relative group hidden lg:block z-20">
                 <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input type="text" placeholder="Search records..." className="pl-8 h-8 w-48 text-xs" />
+                <Input type="text" placeholder="Search records..." className="pl-8 h-8 w-48 text-xs bg-muted/20" />
             </div>
         )}
       </div>

@@ -4,10 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NOCO APP</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+
+    <!-- React Grid Layout Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-grid-layout@1.4.4/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-resizable@3.0.5/css/styles.css">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @layer base {
         :root {
+          /* Zinc-like Light Theme */
           --background: 0 0% 100%;
           --foreground: 240 10% 3.9%;
           --card: 0 0% 100%;
@@ -26,20 +38,12 @@
           --destructive-foreground: 0 0% 98%;
           --border: 240 5.9% 90%;
           --input: 240 5.9% 90%;
-          --ring: 240 10% 3.9%;
+          --ring: 240 5.9% 10%;
           --radius: 0.5rem;
-          
-          /* Legacy/IDE specific mappings */
-          --ide-bg: var(--background);
-          --ide-sidebar: var(--card); 
-          --ide-activity: var(--muted);
-          --ide-panel: var(--card);
-          --ide-border: var(--border);
-          --ide-hover: var(--accent);
-          --ide-text: var(--foreground);
         }
   
         .dark {
+          /* Zinc-like Dark Theme */
           --background: 240 10% 3.9%;
           --foreground: 0 0% 98%;
           --card: 240 10% 3.9%;
@@ -63,16 +67,20 @@
       }
 
       body {
-        background-color: hsl(var(--background));
-        color: hsl(var(--foreground));
-        overflow: hidden;
+        @apply bg-background text-foreground antialiased;
+        font-feature-settings: "rlig" 1, "calt" 1;
+      }
+
+      /* Ensure inputs inherit text color by default in dark mode */
+      input, textarea, select {
+        @apply bg-transparent text-foreground;
       }
       
       .border-border {
         border-color: hsl(var(--border));
       }
       
-      /* Custom scrollbar */
+      /* Refined scrollbar */
       ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
@@ -81,13 +89,31 @@
         background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
-        background: hsl(var(--muted-foreground) / 0.3);
-        border-radius: 5px;
-        border: 2px solid transparent;
-        background-clip: content-box;
+        @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors border-4 border-solid border-transparent bg-clip-content;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: hsl(var(--muted-foreground) / 0.5); 
+
+      /* React Grid Layout Custom Styles */
+      .react-grid-item.react-grid-placeholder {
+        @apply bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg opacity-50 !important;
+      }
+      
+      .react-resizable-handle {
+        @apply opacity-0 transition-opacity;
+      }
+      
+      .react-grid-item:hover .react-resizable-handle {
+        @apply opacity-100;
+      }
+
+      .react-resizable-handle::after {
+        content: "";
+        position: absolute;
+        right: 3px;
+        bottom: 3px;
+        width: 5px;
+        height: 5px;
+        border-right: 2px solid hsl(var(--muted-foreground));
+        border-bottom: 2px solid hsl(var(--muted-foreground));
       }
     </style>
     <script>
@@ -136,17 +162,6 @@
                 DEFAULT: "hsl(var(--card))",
                 foreground: "hsl(var(--card-foreground))",
               },
-              // Legacy support
-              ide: {
-                bg: "hsl(var(--background))",
-                sidebar: "hsl(var(--card))",
-                activity: "hsl(var(--muted))", 
-                panel: "hsl(var(--card))",
-                border: "hsl(var(--border))",
-                hover: "hsl(var(--accent))",
-                text: "hsl(var(--foreground))",
-                accent: "#007fd4", // Keep original blue as specific accent
-              }
             },
             borderRadius: {
               lg: "var(--radius)",
@@ -172,7 +187,11 @@
         "react": "https://aistudiocdn.com/react@^19.2.0",
         "clsx": "https://aistudiocdn.com/clsx@^2.1.0",
         "tailwind-merge": "https://aistudiocdn.com/tailwind-merge@^2.2.0",
-        "class-variance-authority": "https://aistudiocdn.com/class-variance-authority@^0.7.0"
+        "class-variance-authority": "https://aistudiocdn.com/class-variance-authority@^0.7.0",
+        "react-grid-layout": "https://aistudiocdn.com/react-grid-layout@^1.4.4",
+        "lodash": "https://aistudiocdn.com/lodash@^4.17.21",
+        "@dnd-kit/core": "https://esm.sh/@dnd-kit/core@6.1.0?external=react,react-dom",
+        "@dnd-kit/utilities": "https://esm.sh/@dnd-kit/utilities@3.2.2?external=react,react-dom"
       }
     }
     </script>

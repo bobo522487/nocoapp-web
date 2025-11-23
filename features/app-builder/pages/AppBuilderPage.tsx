@@ -99,7 +99,12 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice }) => {
   );
 };
 
-const AppBuilderPage: React.FC = () => {
+interface AppBuilderPageProps {
+  droppedItem?: any;
+  onItemConsumed?: () => void;
+}
+
+const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ droppedItem, onItemConsumed }) => {
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const { width, startResizing } = useResizable({
     initialWidth: 260,
@@ -113,7 +118,11 @@ const AppBuilderPage: React.FC = () => {
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
           <AppToolbar device={device} setDevice={setDevice} />
           <div className="flex-1 flex overflow-hidden relative">
-             <Canvas device={device} />
+             <Canvas 
+               device={device} 
+               droppedItem={droppedItem}
+               onItemConsumed={onItemConsumed}
+             />
           </div>
       </div>
       

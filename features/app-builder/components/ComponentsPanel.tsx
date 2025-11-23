@@ -22,49 +22,63 @@ import {
   GripVertical
 } from 'lucide-react';
 import { Input } from "../../../components/ui/input";
+import { useDraggable } from '@dnd-kit/core';
 
 // --- Config Data ---
 const SECTIONS = [
   {
     title: "Commonly used",
     items: [
-      { name: "Button", icon: MousePointerClick, isNew: false },
-      { name: "Table", icon: Table, isNew: false },
-      { name: "Form", icon: FileText, isNew: false },
-      { name: "Text Input", icon: TextCursor, isNew: false },
-      { name: "Date Time Picker", icon: CalendarClock, isNew: true },
-      { name: "Text", icon: Type, isNew: false },
-    ]
-  },
-  {
-    title: "Buttons",
-    items: [
-      { name: "Button", icon: MousePointerClick, isNew: false },
-      { name: "Button Group", icon: ToggleLeft, isNew: false },
-      { name: "Popover Menu", icon: MessageSquare, isNew: true },
+      { name: "Button", icon: MousePointerClick, isNew: false, type: 'button' },
+      { name: "Input", icon: TextCursor, isNew: false, type: 'input' },
+      { name: "Text Area", icon: FileText, isNew: false, type: 'textarea' },
+      { name: "Text", icon: Type, isNew: false, type: 'text' },
+      { name: "Table", icon: Table, isNew: false, type: 'table' },
     ]
   },
   {
     title: "Data",
     items: [
-      { name: "Table", icon: Table, isNew: false },
-      { name: "Chart", icon: BarChart3, isNew: false },
-      { name: "List View", icon: List, isNew: false },
-    ]
-  },
-  {
-    title: "Layouts",
-    items: [
-      { name: "Form", icon: FileText, isNew: false },
-      { name: "Modal", icon: AppWindow, isNew: true },
-      { name: "Container", icon: Box, isNew: false },
-      { name: "Tabs", icon: GalleryHorizontal, isNew: false },
-      { name: "List View", icon: List, isNew: false },
-      { name: "Calendar", icon: Calendar, isNew: false },
-      { name: "Kanban", icon: Kanban, isNew: false },
+      { name: "Chart", icon: BarChart3, isNew: false, type: 'chart' },
+      { name: "Stat Card", icon: BarChart3, isNew: false, type: 'stat' },
     ]
   }
 ];
+
+interface DraggableItemProps {
+  item: {
+    name: string;
+    icon: React.ElementType;
+    isNew?: boolean;
+    type: string;
+  };
+}
+
+const DraggableItem: React.FC<DraggableItemProps> = ({ item }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `draggable-${item.type}-${item.name}`,
+    data: item
+  });
+
+  return (
+    <div 
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        className={`flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-grab active:cursor-grabbing transition-all group relative ${isDragging ? 'opacity-50' : ''}`}
+    >
+        <div className="w-10 h-10 flex items-center justify-center mb-1 relative bg-muted/50 rounded-md group-hover:bg-background transition-colors border border-transparent group-hover:border-border">
+            <item.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary transition-colors" />
+            {item.isNew && (
+                <span className="absolute -top-1 -right-1 text-[8px] bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-1 rounded-sm font-bold">New</span>
+            )}
+        </div>
+        <span className="text-[10px] text-muted-foreground text-center leading-tight group-hover:text-foreground mt-1">
+            {item.name}
+        </span>
+    </div>
+  );
+};
 
 interface ComponentsPanelProps {
     onClose: () => void;
@@ -72,7 +86,7 @@ interface ComponentsPanelProps {
 
 const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<'components' | 'modules'>('components');
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ "Commonly used": true, "Buttons": true, "Data": true, "Layouts": true });
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ "Commonly used": true, "Data": true });
 
   const toggleSection = (title: string) => {
     setOpenSections(prev => ({ ...prev, [title]: !prev[title] }));
@@ -139,22 +153,7 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
                         {openSections[section.title] && (
                             <div className="grid grid-cols-3 gap-2 pb-3 animate-in fade-in zoom-in-95 duration-150">
                                 {section.items.map((item, idx) => (
-                                    <div 
-                                        key={`${section.title}-${idx}`}
-                                        draggable
-                                        onDragEnd={onClose}
-                                        className="flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-grab active:cursor-grabbing transition-all group relative"
-                                    >
-                                        <div className="w-10 h-10 flex items-center justify-center mb-1 relative bg-muted/50 rounded-md group-hover:bg-background transition-colors border border-transparent group-hover:border-border">
-                                            <item.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                                            {item.isNew && (
-                                                <span className="absolute -top-1 -right-1 text-[8px] bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-1 rounded-sm font-bold">New</span>
-                                            )}
-                                        </div>
-                                        <span className="text-[10px] text-muted-foreground text-center leading-tight group-hover:text-foreground mt-1">
-                                            {item.name}
-                                        </span>
-                                    </div>
+                                    <DraggableItem key={`${section.title}-${idx}`} item={item} />
                                 ))}
                             </div>
                         )}
@@ -165,14 +164,12 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
             /* Modules Tab */
             <div className="space-y-3">
                 {[
-                    { id: 1, title: '111', icon: LayoutGrid },
-                    { id: 2, title: '1', icon: GripVertical }
+                    { id: 1, title: 'Auth Form', icon: LayoutGrid },
+                    { id: 2, title: 'Header', icon: GripVertical }
                 ].map((mod) => (
                     <div 
                         key={mod.id} 
-                        draggable 
-                        onDragEnd={onClose}
-                        className="flex items-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-grab active:cursor-grabbing transition-all group"
+                        className="flex items-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-pointer transition-all group"
                     >
                         <div className="w-12 h-10 flex items-center justify-center bg-muted/50 rounded mr-3 group-hover:bg-background transition-colors">
                              <mod.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary" />

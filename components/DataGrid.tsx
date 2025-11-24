@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -126,6 +127,15 @@ function DataGrid<T>({
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+
+  // Reset state when title changes (implies context switch)
+  useEffect(() => {
+    setSelectedIds([]);
+    setFilters([]);
+    setSort(null);
+    setCurrentPage(1);
+    setHiddenFields([]);
+  }, [title]);
 
   // Refs
   const fieldsBtnRef = useRef<HTMLButtonElement>(null);
@@ -266,7 +276,8 @@ function DataGrid<T>({
                 <Button 
                     size="sm"
                     onClick={onAdd}
-                    className="h-7 gap-1.5 text-xs bg-blue-600 hover:bg-blue-700"
+                    variant="default"
+                    className="h-7 gap-1.5 text-xs"
                 >
                     <Plus size={14} strokeWidth={2.5} /> Add Item
                 </Button>

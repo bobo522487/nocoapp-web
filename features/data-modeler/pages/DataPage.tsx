@@ -287,8 +287,7 @@ const DataPage: React.FC = () => {
     
       {viewMode === 'MODEL' ? (
           <DataGrid<SchemaField>
-            key={`${activeTableId}-MODEL`}
-            title={activeTableId}
+            title={`${activeTableId} (Model)`}
             columns={modelColumns}
             data={schema}
             onAdd={handleSchemaAdd}
@@ -298,8 +297,7 @@ const DataPage: React.FC = () => {
           />
       ) : (
           <DataGrid<any>
-            key={`${activeTableId}-DATA`}
-            title={activeTableId}
+            title={`${activeTableId} (Data)`}
             columns={dataColumns}
             data={records}
             onAdd={handleDataAdd}

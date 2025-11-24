@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks, Palette, Check, Triangle, Database, MessageSquare, Code } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
 import { Button } from "../ui/button";
@@ -9,6 +9,7 @@ import Dropdown from '../common/Dropdown';
 const Header: React.FC = () => {
   const { activeView, isDarkMode, toggleTheme, theme, setAppTheme } = useAppStore();
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
 
   const themes: { id: AppTheme; label: string; icon: any }[] = [
     { id: 'vercel', label: 'Vercel (Default)', icon: Triangle },
@@ -46,6 +47,7 @@ const Header: React.FC = () => {
 
           <div className="relative">
             <Button 
+                ref={themeButtonRef}
                 variant="ghost" 
                 size="icon" 
                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
@@ -57,6 +59,7 @@ const Header: React.FC = () => {
             <Dropdown 
                 open={isThemeOpen}
                 onOpenChange={setIsThemeOpen}
+                anchorRef={themeButtonRef}
                 triggerLabel=""
                 className="hidden" // Hidden trigger because we use the button above
                 items={themes.map(t => ({

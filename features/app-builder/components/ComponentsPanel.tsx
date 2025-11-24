@@ -26,7 +26,7 @@ const DraggableItem: React.FC<DraggableItemProps> = ({ manifest }) => {
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        className={`flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-blue-50/50 dark:hover:bg-blue-900/10 hover:border-blue-200 dark:hover:border-blue-800/50 cursor-grab active:cursor-grabbing transition-all group relative ${isDragging ? 'opacity-50' : ''}`}
+        className={`flex flex-col items-center justify-center p-2 rounded border border-transparent hover:bg-primary/10 hover:border-primary/20 cursor-grab active:cursor-grabbing transition-all group relative ${isDragging ? 'opacity-50' : ''}`}
     >
         <div className="w-10 h-10 flex items-center justify-center mb-1 relative bg-muted/50 rounded-md group-hover:bg-background transition-colors border border-transparent group-hover:border-border">
             <manifest.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary transition-colors" />
@@ -92,7 +92,7 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
              <Input 
                type="text" 
                placeholder="Search components" 
-               className="pl-9 h-8 text-xs bg-muted/30"
+               className="pl-9 h-8 text-xs bg-muted/30 focus-visible:ring-primary"
              />
         </div>
 

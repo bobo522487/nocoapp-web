@@ -114,7 +114,7 @@ const TablePanel: React.FC = () => {
                 <Search size={12} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input 
                     placeholder="Search tables..." 
-                    className="h-8 pl-8 text-xs bg-muted/30"
+                    className="h-8 pl-8 text-xs bg-muted/30 focus-visible:ring-primary"
                 />
             </div>
 

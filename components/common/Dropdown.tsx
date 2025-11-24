@@ -21,6 +21,7 @@ interface DropdownProps {
   className?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  anchorRef?: React.RefObject<HTMLElement>;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -34,7 +35,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   footer,
   className = "",
   open,
-  onOpenChange
+  onOpenChange,
+  anchorRef
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -53,11 +55,27 @@ const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+        const target = anchorRef?.current || triggerRef.current;
+        if (target) {
+            const rect = target.getBoundingClientRect();
+            // Only update if we have valid coordinates
+            if (rect.width > 0 || rect.height > 0) {
+                setPosition({
+                    top: rect.bottom + 4,
+                    left: rect.left
+                });
+                setSearchTerm('');
+            }
+        }
+    }
+  }, [isOpen, anchorRef]);
+
   const toggleDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Removed e.stopPropagation() to allow document click handler to close other open dropdowns
     
-    if (!isOpen && triggerRef.current) {
+    if (!isOpen && !anchorRef && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setPosition({
         top: rect.bottom + 4,
@@ -70,19 +88,18 @@ const Dropdown: React.FC<DropdownProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check if click is outside both the dropdown content AND the trigger
       if (
         dropdownRef.current && 
         !dropdownRef.current.contains(event.target as Node) &&
         triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
+        !triggerRef.current.contains(event.target as Node) &&
+        (!anchorRef || (anchorRef.current && !anchorRef.current.contains(event.target as Node)))
       ) {
         handleOpenChange(false);
       }
     };
 
     const handleScroll = (event: Event) => {
-      // Ignore scrolls happening inside the dropdown itself
       if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
         return;
       }
@@ -100,7 +117,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [isOpen, onOpenChange]);
+  }, [isOpen, onOpenChange, anchorRef]);
 
   const filteredItems = items.filter(item => 
     item.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,9 +139,8 @@ const Dropdown: React.FC<DropdownProps> = ({
         left: position.left,
         width: width
       }}
-      onMouseDown={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      {/* Search */}
       <div className="flex items-center px-3 border-b border-border/50">
         <Search size={14} className="shrink-0 opacity-50 text-muted-foreground" />
         <input 
@@ -136,7 +152,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         />
       </div>
 
-      {/* List */}
       <div className="max-h-[300px] overflow-y-auto p-1">
         {Object.entries(groupedItems).map(([group, groupItems]: [string, DropdownItem[]]) => (
           <div key={group}>
@@ -171,7 +186,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         )}
       </div>
 
-      {/* Footer */}
       {footer && (
         <div className="border-t border-border p-1 bg-muted/20">
            {footer}

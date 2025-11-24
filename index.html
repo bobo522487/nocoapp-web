@@ -79,6 +79,7 @@
           --primary-foreground: 154 60% 5%;
           --secondary: 240 4% 16%;
           --muted: 240 4% 16%;
+          --accent: 240 4% 16%;
           --border: 240 4% 18%;
           --input: 240 4% 18%;
           --ring: 154 60% 53%;
@@ -92,9 +93,17 @@
         }
         .theme-slack.dark {
           --background: 295 20% 8%;
-          --primary: 295 50% 60%; /* Lighter purple for dark mode */
+          --foreground: 295 10% 90%;
+          --card: 295 15% 12%;
+          --popover: 295 20% 8%;
+          --primary: 295 50% 60%;
           --primary-foreground: 295 50% 10%;
-          --sidebar-bg: 295 25% 15%;
+          --secondary: 295 15% 15%;
+          --muted: 295 15% 15%;
+          --muted-foreground: 295 10% 60%;
+          --accent: 295 15% 15%;
+          --border: 295 15% 18%;
+          --input: 295 15% 18%;
           --ring: 295 50% 60%;
         }
 
@@ -105,7 +114,7 @@
           --ring: 210 100% 40%;
         }
         .theme-vscode.dark {
-          --background: 220 15% 10%; /* #1e1e1e approx */
+          --background: 220 15% 10%; /* #1e1e1e */
           --foreground: 220 10% 85%;
           --card: 220 15% 13%;
           --popover: 220 15% 10%;
@@ -149,7 +158,7 @@
 
       /* React Grid Layout Custom Styles */
       .react-grid-item.react-grid-placeholder {
-        @apply bg-blue-500/10 border-2 border-dashed border-blue-500 rounded-lg opacity-50 !important;
+        @apply bg-primary/10 border-2 border-dashed border-primary rounded-lg opacity-50 !important;
       }
       
       .react-resizable-handle {

@@ -249,7 +249,7 @@ const PagesPanel = () => {
                         key={page.id} 
                         onClick={() => handlePageClick(page.id)}
                         className={`relative px-3 py-1.5 flex items-center text-sm cursor-pointer transition-colors rounded-sm group mb-0.5 ${
-                            isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            isActive ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         }`}
                     >
                         <div className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors flex items-center`}>
@@ -356,7 +356,7 @@ const PagesPanel = () => {
                                     onClick={() => setSelectedComponentId(item.i)}
                                     className={`group flex items-center px-2 py-1.5 rounded-sm cursor-pointer text-xs mb-0.5 transition-colors ${
                                         isSelected 
-                                        ? 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' 
+                                        ? 'bg-primary/10 text-primary' 
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                     }`}
                                  >

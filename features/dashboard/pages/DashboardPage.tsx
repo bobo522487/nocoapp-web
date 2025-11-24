@@ -27,7 +27,6 @@ const DashboardPage: React.FC = () => {
 
   const handleAppClick = (appId: string) => {
       // Navigate to the first page of the app (default behavior)
-      // Since pages are mocked, we navigate to the generic app route which redirects
       navigate(`/apps/${appId}`);
   };
 
@@ -43,35 +42,30 @@ const DashboardPage: React.FC = () => {
       name: 'Order Management System',
       description: 'Internal tool for managing customer orders.',
       lastEdited: '15d ago',
-      color: 'bg-blue-500',
     },
     {
       id: 'app-2',
       name: 'CRM Dashboard',
       description: 'Customer relationship management.',
       lastEdited: '12d ago',
-      color: 'bg-purple-500',
     },
     {
       id: 'app-3',
       name: 'Employee Portal',
       description: 'HR portal for leave requests.',
       lastEdited: '3d ago',
-      color: 'bg-green-500',
     },
     {
       id: 'app-4',
       name: 'E-commerce Frontend',
       description: 'Store with cart and checkout.',
       lastEdited: '5h ago',
-      color: 'bg-orange-500',
     },
     {
       id: 'app-5',
       name: 'Inventory Tracker',
       description: 'Warehouse stock monitoring.',
       lastEdited: '1h ago',
-      color: 'bg-red-500',
     }
   ];
 
@@ -81,14 +75,12 @@ const DashboardPage: React.FC = () => {
       name: 'nocoapp-db',
       type: 'PostgreSQL',
       lastEdited: '2d ago',
-      color: 'bg-cyan-500',
     },
     {
       id: 'src-2',
       name: 'production-analytics',
       type: 'MySQL',
       lastEdited: '5d ago',
-      color: 'bg-indigo-500',
     }
   ];
 
@@ -122,19 +114,19 @@ const DashboardPage: React.FC = () => {
               {apps.map(app => (
                   <div 
                     key={app.id} 
-                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
+                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-md cursor-pointer h-[150px]"
                     onClick={() => handleAppClick(app.id)}
                   >
                     {/* Header */}
                     <div>
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                                {/* Adjusted Icon Size 16x16 inside a small container */}
-                                <div className={`w-6 h-6 rounded flex items-center justify-center ${app.color} bg-opacity-10 transition-colors`}>
-                                    <LayoutGrid size={16} className={app.color.replace('bg-', 'text-')} />
+                                {/* Icon Container */}
+                                <div className="w-8 h-8 rounded flex items-center justify-center bg-primary/10 transition-colors">
+                                    <LayoutGrid size={18} className="text-primary" />
                                 </div>
-                                {/* Name Only */}
-                                <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight">{app.name}</span>
+                                {/* Name */}
+                                <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight mt-1 group-hover:text-primary transition-colors">{app.name}</span>
                             </div>
                             
                             <div className="relative">
@@ -188,11 +180,11 @@ const DashboardPage: React.FC = () => {
               
               {/* New Application Placeholder Card */}
               <div 
-                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
+                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-primary/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
                 onClick={() => navigate('/apps/new')}
               >
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
-                      <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />
+                      <Plus size={20} className="text-muted-foreground group-hover:text-primary" />
                   </div>
                   <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Create New Application</span>
               </div>
@@ -212,17 +204,17 @@ const DashboardPage: React.FC = () => {
               {dataSources.map(src => (
                   <div 
                     key={src.id} 
-                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
+                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:shadow-md cursor-pointer h-[150px]"
                     onClick={() => handleSourceClick(src.id)}
                   >
                       {/* Header */}
                       <div>
                           <div className="flex items-start justify-between">
                               <div className="flex items-center gap-3">
-                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${src.color} bg-opacity-10 transition-colors`}>
-                                        <Database size={16} className={src.color.replace('bg-', 'text-')} />
+                                    <div className="w-8 h-8 rounded flex items-center justify-center bg-primary/10 transition-colors">
+                                        <Database size={16} className="text-primary" />
                                     </div>
-                                    <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight">{src.name}</span>
+                                    <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight mt-1 group-hover:text-primary transition-colors">{src.name}</span>
                               </div>
                               
                               <div className="relative">
@@ -259,7 +251,6 @@ const DashboardPage: React.FC = () => {
                       {/* Footer / Stats */}
                       <div className="flex items-center justify-between mt-auto pt-3">
                           <div className="text-[11px] text-muted-foreground font-medium">
-                              {/* Using generic time format */}
                               <span>Edited {src.lastEdited}</span>
                           </div>
                           
@@ -273,11 +264,11 @@ const DashboardPage: React.FC = () => {
 
               {/* New Data Source Placeholder Card */}
               <div 
-                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
+                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-primary/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
                 onClick={() => navigate('/data')}
               >
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
-                      <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />
+                      <Plus size={20} className="text-muted-foreground group-hover:text-primary" />
                   </div>
                   <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Create New Data Source</span>
               </div>

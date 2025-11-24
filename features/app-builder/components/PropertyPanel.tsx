@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   MoreVertical, 
@@ -13,6 +12,8 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Button } from "../../../components/ui/button";
 import { GridItemData, Page } from '../../../types';
+import { registry } from '../../../widgets/registry';
+import { PropertyField } from '../../../widgets/types';
 
 // --- Reusable UI Components for the Panel ---
 
@@ -71,8 +72,6 @@ const SelectControl = ({ value, options, onChange }: { value: string, options: s
 
 const ToggleControl = ({ label, checked = false, onChange }: { label: string, checked?: boolean, onChange?: (val: boolean) => void }) => {
     const [internalChecked, setInternalChecked] = useState(checked);
-    
-    // Determine if controlled or uncontrolled
     const isChecked = onChange ? checked : internalChecked;
 
     const handleToggle = () => {
@@ -249,6 +248,50 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
       }
   };
 
+  const widgetDef = registry.get(selectedItem.type);
+  const properties = widgetDef ? widgetDef.manifest.properties : [];
+
+  const renderField = (field: PropertyField) => {
+      const currentValue = selectedItem.content?.[field.name] || field.defaultValue;
+
+      switch(field.type) {
+          case 'text':
+          case 'number':
+            return (
+                <div key={field.name}>
+                    <ControlHeader label={field.label} />
+                    <InputControl 
+                        value={currentValue} 
+                        onChange={(v) => handleContentChange(field.name, v)} 
+                        placeholder={field.placeholder}
+                    />
+                </div>
+            );
+          case 'select':
+            return (
+                <div key={field.name}>
+                    <ControlHeader label={field.label} fx={false} />
+                    <SelectControl 
+                        value={currentValue}
+                        options={field.options || []}
+                        onChange={(v) => handleContentChange(field.name, v)}
+                    />
+                </div>
+            );
+          case 'switch':
+            return (
+                <ToggleControl 
+                    key={field.name}
+                    label={field.label}
+                    checked={currentValue === true}
+                    onChange={(v) => handleContentChange(field.name, v)}
+                />
+            );
+          default:
+            return null;
+      }
+  };
+
   return (
     <div 
       style={{ width }}
@@ -302,75 +345,32 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
         
         {activeTab === 'PROPERTIES' ? (
             <div className="pb-8">
-                <Accordion title="General">
-                    <div className="space-y-4">
-                        <div>
-                            <ControlHeader label="Label / Title" />
-                            <InputControl 
-                                value={selectedItem.title} 
-                                onChange={handleTitleChange} 
-                                placeholder="Component Title"
-                            />
-                        </div>
-                        
-                        {/* Dynamic Fields based on Type */}
-                        
-                        {(selectedItem.type === 'stat') && (
-                            <>
-                                <div>
-                                    <ControlHeader label="Value" />
-                                    <InputControl 
-                                        value={selectedItem.content?.value} 
-                                        onChange={(v) => handleContentChange('value', v)} 
-                                        placeholder="e.g. $10,000"
-                                    />
-                                </div>
-                                <div>
-                                    <ControlHeader label="Trend" />
-                                    <InputControl 
-                                        value={selectedItem.content?.trend} 
-                                        onChange={(v) => handleContentChange('trend', v)} 
-                                        placeholder="e.g. +10%"
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {(selectedItem.type === 'button') && (
-                            <>
-                                <div>
-                                    <ControlHeader label="Variant" fx={false} />
-                                    <SelectControl 
-                                        value={selectedItem.content?.variant || 'default'}
-                                        options={['default', 'secondary', 'destructive', 'outline', 'ghost', 'link']}
-                                        onChange={(v) => handleContentChange('variant', v)}
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                        {(selectedItem.type === 'input' || selectedItem.type === 'textarea') && (
-                            <>
-                                <div>
-                                    <ControlHeader label="Placeholder" />
-                                    <InputControl 
-                                        value={selectedItem.content?.placeholder} 
-                                        onChange={(v) => handleContentChange('placeholder', v)}
-                                        placeholder="Placeholder text..."
-                                    />
-                                </div>
-                                <div>
-                                    <ControlHeader label="Default Value" />
-                                    <InputControl 
-                                        value={selectedItem.content?.defaultValue} 
-                                        onChange={(v) => handleContentChange('defaultValue', v)}
-                                    />
-                                </div>
-                            </>
-                        )}
-
-                    </div>
-                </Accordion>
+                {/* Always show Title/Label if it's not explicitly in properties (fallback) or if we treat title special in ItemData */}
+                 {/* Note: In our registry, we mapped 'title' property in Manifest. If it exists there, it will be rendered in groups below. */}
+                 {/* However, the GridItemData has a root 'title' property. We sync content.title with item.title in store/useAppStore if needed, or just rely on content. */}
+                 
+                 {properties.length > 0 ? (
+                    properties.map(group => (
+                        <Accordion key={group.group} title={group.group}>
+                            <div className="space-y-4">
+                                {group.fields.map(field => renderField(field))}
+                            </div>
+                        </Accordion>
+                    ))
+                 ) : (
+                    <Accordion title="General">
+                         <div className="space-y-4">
+                            <div>
+                                <ControlHeader label="Label / Title" />
+                                <InputControl 
+                                    value={selectedItem.title} 
+                                    onChange={handleTitleChange} 
+                                    placeholder="Component Title"
+                                />
+                            </div>
+                         </div>
+                    </Accordion>
+                 )}
 
                 <Accordion title="Layout & Visibility">
                     <div className="space-y-4">

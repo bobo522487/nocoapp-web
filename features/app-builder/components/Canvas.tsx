@@ -1,13 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { WidthProvider, Responsive, Layout, Layouts } from "react-grid-layout";
-import { GripVertical, BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Type, MousePointerClick, Copy, Trash2 } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
+import { GripVertical, MousePointerClick, Copy, Trash2, AlertCircle } from 'lucide-react';
 import { useDroppable, useDndMonitor, DragMoveEvent } from '@dnd-kit/core';
 import { GridItemData } from '../../../types';
+import { registry } from '../../../widgets/registry';
+import BaseWidget from '../../../widgets/BaseWidget';
 
 // Wrap ResponsiveGridLayout with WidthProvider to handle window resizing automatically
 const ResponsiveGridLayout = WidthProvider(Responsive) as any;
@@ -53,20 +50,6 @@ const Canvas: React.FC<CanvasProps> = ({
     setMounted(true);
   }, []);
 
-  // Helper to determine item dimensions
-  const getItemDimensions = (type: string) => {
-    let w = 6;
-    let h = 4;
-    
-    if (type === 'stat') { w = 3; h = 3; }
-    else if (type === 'button') { w = 2; h = 2; }
-    else if (type === 'input' || type === 'text') { w = 4; h = 3; }
-    else if (type === 'textarea') { w = 4; h = 4; }
-    else if (type === 'table' || type === 'chart') { w = 6; h = 8; }
-    
-    return { w, h };
-  };
-
   // Monitor DnD events to update dropping placeholder
   useDndMonitor({
     onDragMove(event: DragMoveEvent) {
@@ -82,7 +65,10 @@ const Canvas: React.FC<CanvasProps> = ({
       }
 
       const type = active.data.current.type;
-      const { w, h } = getItemDimensions(type);
+      const widgetDef = registry.get(type);
+      
+      // Default size fallback if not in registry
+      const { w, h } = widgetDef ? widgetDef.manifest.defaultSize : { w: 4, h: 4 };
       
       const activeRect = active.rect.current.translated;
       if (!activeRect) return;
@@ -131,7 +117,18 @@ const Canvas: React.FC<CanvasProps> = ({
   // Handle Drop (Finalize)
   useEffect(() => {
     if (droppedItem && onItemConsumed) {
-      const { w, h } = getItemDimensions(droppedItem.type);
+      const widgetDef = registry.get(droppedItem.type);
+      const { w, h } = widgetDef ? widgetDef.manifest.defaultSize : { w: 4, h: 4 };
+
+      // Initialize default values for properties defined in manifest
+      const initialContent: any = {};
+      widgetDef?.manifest.properties.forEach(group => {
+          group.fields.forEach(field => {
+             if (field.defaultValue !== undefined) {
+                 initialContent[field.name] = field.defaultValue;
+             }
+          });
+      });
 
       const newItemBase: GridItemData = {
         i: droppedItem.id,
@@ -141,7 +138,7 @@ const Canvas: React.FC<CanvasProps> = ({
         h,
         type: droppedItem.type,
         title: droppedItem.name,
-        content: { label: droppedItem.name }
+        content: initialContent
       };
 
       // Add to all existing layouts to ensure availability across breakpoints
@@ -213,8 +210,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
   const handleLayoutChangeInternal = (currentLayout: Layout[], allLayouts: Layouts) => {
       // Sync RGL layouts back to our GridItemData structure
-      // Preserving metadata (type, title, content) from the source of truth (likely LG or previous state)
-      
       const newLayoutsState: Record<string, GridItemData[]> = {};
       
       Object.keys(allLayouts).forEach(bp => {
@@ -258,113 +253,7 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  // --- Renderers ---
-  const renderStatWidget = (item: GridItemData) => (
-    <Card className="h-full w-full flex flex-col justify-between shadow-none border-0 bg-transparent pointer-events-none">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{item.title}</CardTitle>
-            {item.content?.icon && <item.content.icon className="h-4 w-4 text-muted-foreground" />}
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{item.content?.value || '0'}</div>
-            <p className="text-xs text-muted-foreground">
-                {item.content?.trend || '+0%'} from last month
-            </p>
-        </CardContent>
-    </Card>
-  );
-
-  const renderChartWidget = (item: GridItemData) => (
-    <Card className="h-full w-full flex flex-col shadow-none border-0 bg-transparent pointer-events-none">
-        <CardHeader className="p-4">
-            <CardTitle className="text-base">{item.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0 flex-1">
-             <div className="w-full h-full flex items-end justify-between gap-2 px-2 pb-2">
-                {[40, 65, 30, 70, 45, 80, 55, 30, 60, 45, 85, 50].map((h, i) => (
-                    <div 
-                        key={i} 
-                        className="bg-primary/20 hover:bg-primary/40 transition-colors rounded-t-sm w-full"
-                        style={{ height: `${h}%` }}
-                    ></div>
-                ))}
-             </div>
-        </CardContent>
-    </Card>
-  );
-
-  const renderTableWidget = (item: GridItemData) => (
-    <Card className="h-full w-full flex flex-col shadow-none border-0 bg-transparent pointer-events-none">
-        <CardHeader className="p-4 flex flex-row items-center justify-between">
-            <CardTitle className="text-base">{item.title}</CardTitle>
-            <Button variant="ghost" size="icon" className="h-6 w-6"><ArrowUpRight size={14}/></Button>
-        </CardHeader>
-        <CardContent className="p-0 flex-1 overflow-hidden">
-             <div className="space-y-4 px-4">
-                {[1,2,3].map(i => (
-                    <div key={i} className="flex items-center justify-between border-b border-border pb-2 last:border-0">
-                        <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">OM</div>
-                            <div className="flex flex-col">
-                                <span className="text-sm font-medium">User Name</span>
-                                <span className="text-xs text-muted-foreground">user@email.com</span>
-                            </div>
-                        </div>
-                        <div className="text-sm font-medium">+$1,999.00</div>
-                    </div>
-                ))}
-             </div>
-        </CardContent>
-    </Card>
-  );
-
-  const renderInputWidget = (item: GridItemData) => (
-      <div className="p-4 w-full h-full flex flex-col gap-2 pointer-events-none">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              {item.title || 'Input Label'}
-          </label>
-          <Input placeholder={item.content?.placeholder || "Enter text..."} defaultValue={item.content?.defaultValue} className="bg-background" />
-      </div>
-  );
-
-  const renderTextareaWidget = (item: GridItemData) => (
-    <div className="p-4 w-full h-full flex flex-col gap-2 pointer-events-none">
-        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-            {item.title || 'Description'}
-        </label>
-        <Textarea placeholder={item.content?.placeholder || "Type your message here."} className="bg-background resize-none h-full" />
-    </div>
-  );
-
-  const renderButtonWidget = (item: GridItemData) => (
-    <div className="p-4 w-full h-full flex items-center justify-center pointer-events-none">
-        <Button className="w-full h-full" variant={item.content?.variant || 'default'}>{item.title || 'Button'}</Button>
-    </div>
-  );
-
-  const renderItemContent = (item: GridItemData) => {
-      switch(item.type) {
-          case 'stat': return renderStatWidget(item);
-          case 'chart': return renderChartWidget(item);
-          case 'table': return renderTableWidget(item);
-          case 'input': return renderInputWidget(item);
-          case 'textarea': return renderTextareaWidget(item);
-          case 'button': return renderButtonWidget(item);
-          default: return (
-            <div className="p-4 text-sm flex flex-col items-center justify-center h-full text-muted-foreground pointer-events-none">
-                <Type size={24} className="mb-2 opacity-50"/>
-                {item.title}
-            </div>
-          );
-      }
-  };
-
-  // Determine which items to render. RGL handles switching based on breakpoints,
-  // but we need to pass the correct `layouts` object prop.
-  // For the initial `children` generation, using `lg` or fallback is standard,
-  // as RGL will position them based on the matching layout key.
-  // We ensure we iterate over a set that contains ALL items from all layouts if they differ, 
-  // but typically 'lg' has the master list.
+  // Determine which items to render.
   const renderItems = layouts['lg'] || [];
 
   return (
@@ -412,6 +301,8 @@ const Canvas: React.FC<CanvasProps> = ({
                 >
                     {renderItems.map((item) => {
                         const isSelected = item.i === selectedItemId;
+                        const widgetDef = registry.get(item.type);
+
                         return (
                           <div 
                             key={item.i} 
@@ -442,7 +333,14 @@ const Canvas: React.FC<CanvasProps> = ({
                                   </div>
                               </div>
 
-                              {renderItemContent(item)}
+                              {widgetDef ? (
+                                <BaseWidget definition={widgetDef} item={item} />
+                              ) : (
+                                <div className="p-4 flex flex-col items-center justify-center h-full text-muted-foreground">
+                                    <AlertCircle size={24} className="mb-2 text-destructive opacity-50"/>
+                                    <span className="text-xs">Unknown Type: {item.type}</span>
+                                </div>
+                              )}
                           </div>
                       );
                     })}

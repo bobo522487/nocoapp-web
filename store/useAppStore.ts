@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { ViewMode, Page } from '../types';
+import { ViewMode, Page, GridItemData } from '../types';
 
 interface AppState {
   isDarkMode: boolean;
@@ -16,12 +16,27 @@ interface AppState {
   updatePage: (id: string, updates: Partial<Page>) => void;
   addPage: (page: Page) => void;
   deletePage: (id: string) => void;
+
+  // App Builder / Layout State
+  layout: GridItemData[];
+  selectedComponentId: string | null;
+  setLayout: (layout: GridItemData[]) => void;
+  setSelectedComponentId: (id: string | null) => void;
+  updateLayoutItem: (id: string, updates: Partial<GridItemData>) => void;
 }
 
 const INITIAL_PAGES: Page[] = [
   { id: 'page-1', name: 'Dashboard', icon: 'LayoutGrid', isHome: true, isHidden: false, isDisabled: false, height: '800' },
   { id: 'page-2', name: 'Orders', icon: 'ShoppingCart', isHome: false, isHidden: false, isDisabled: false, height: '1000' },
   { id: 'page-3', name: 'Settings', icon: 'Settings', isHome: false, isHidden: false, isDisabled: false, height: '600' },
+];
+
+const INITIAL_LAYOUT: GridItemData[] = [
+  { i: 'stat1', x: 0, y: 0, w: 3, h: 3, type: 'stat', title: 'Total Revenue', content: { value: '$45,231.89', trend: '+20.1%' } },
+  { i: 'stat2', x: 3, y: 0, w: 3, h: 3, type: 'stat', title: 'Subscriptions', content: { value: '+2350', trend: '+180.1%' } },
+  { i: 'stat3', x: 6, y: 0, w: 3, h: 3, type: 'stat', title: 'Sales', content: { value: '+12,234', trend: '+19%' } },
+  { i: 'chart1', x: 0, y: 3, w: 8, h: 8, type: 'chart', title: 'Revenue Overview', content: {} },
+  { i: 'list1', x: 8, y: 3, w: 4, h: 8, type: 'table', title: 'Recent Sales', content: {} },
 ];
 
 export const useAppStore = create<AppState>((set) => ({
@@ -46,5 +61,14 @@ export const useAppStore = create<AppState>((set) => ({
     activePageId: state.activePageId === id && state.pages.length > 1 
         ? state.pages.find(p => p.id !== id)?.id || '' // Fallback to another page
         : state.activePageId
+  })),
+
+  // Layout State Implementation
+  layout: INITIAL_LAYOUT,
+  selectedComponentId: null,
+  setLayout: (layout) => set({ layout }),
+  setSelectedComponentId: (id) => set({ selectedComponentId: id }),
+  updateLayoutItem: (id, updates) => set((state) => ({
+    layout: state.layout.map(item => item.i === id ? { ...item, ...updates } : item)
   })),
 }));

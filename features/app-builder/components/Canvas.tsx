@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { WidthProvider, Responsive, Layout } from "react-grid-layout";
 import { GripVertical, BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Type, MousePointerClick, Copy, Trash2 } from 'lucide-react';
@@ -6,22 +7,10 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import { useDroppable, useDndMonitor, DragMoveEvent } from '@dnd-kit/core';
+import { GridItemData } from '../../../types';
 
 // Wrap ResponsiveGridLayout with WidthProvider to handle window resizing automatically
 const ResponsiveGridLayout = WidthProvider(Responsive) as any;
-
-export interface GridItemData {
-  i: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  minW?: number;
-  minH?: number;
-  type: string;
-  title?: string;
-  content?: any;
-}
 
 interface CanvasProps {
   device?: 'desktop' | 'tablet' | 'mobile';

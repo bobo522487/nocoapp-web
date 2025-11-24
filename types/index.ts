@@ -43,3 +43,16 @@ export interface Page {
   isDisabled: boolean;
   height: string;
 }
+
+export interface GridItemData {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  type: string;
+  title?: string;
+  content?: any;
+}

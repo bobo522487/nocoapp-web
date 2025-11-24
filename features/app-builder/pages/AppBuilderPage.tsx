@@ -1,21 +1,12 @@
 
 import React, { useState } from 'react';
-import Canvas, { GridItemData } from '../components/Canvas';
+import Canvas from '../components/Canvas';
 import PropertyPanel from '../components/PropertyPanel';
 import { useResizable } from '../../../hooks/useResizable';
 import { Button } from "../../../components/ui/button";
 import { Undo2, Redo2, Monitor, Tablet, Smartphone, Save, Play, Rocket, MousePointer2, Hand, Trash2 } from 'lucide-react';
 import { useAppStore } from '../../../store/useAppStore';
-import { Page } from '../../../types';
-
-// Initial Layout Data
-const INITIAL_LAYOUT: GridItemData[] = [
-  { i: 'stat1', x: 0, y: 0, w: 3, h: 3, type: 'stat', title: 'Total Revenue', content: { value: '$45,231.89', trend: '+20.1%' } },
-  { i: 'stat2', x: 3, y: 0, w: 3, h: 3, type: 'stat', title: 'Subscriptions', content: { value: '+2350', trend: '+180.1%' } },
-  { i: 'stat3', x: 6, y: 0, w: 3, h: 3, type: 'stat', title: 'Sales', content: { value: '+12,234', trend: '+19%' } },
-  { i: 'chart1', x: 0, y: 3, w: 8, h: 8, type: 'chart', title: 'Revenue Overview', content: {} },
-  { i: 'list1', x: 8, y: 3, w: 4, h: 8, type: 'table', title: 'Recent Sales', content: {} },
-];
+import { Page, GridItemData } from '../../../types';
 
 interface AppToolbarProps {
   device: 'desktop' | 'tablet' | 'mobile';
@@ -123,13 +114,22 @@ interface AppBuilderPageProps {
 }
 
 const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedItem, onItemConsumed }) => {
-  const { pages, activePageId, updatePage } = useAppStore();
+  const { 
+      pages, 
+      activePageId, 
+      updatePage,
+      layout,
+      setLayout,
+      selectedComponentId,
+      setSelectedComponentId,
+      updateLayoutItem
+  } = useAppStore();
+  
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [layout, setLayout] = useState<GridItemData[]>(INITIAL_LAYOUT);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   // Derived active page
   const activePage = pages.find(p => p.id === activePageId);
+  const selectedItem = layout.find(i => i.i === selectedComponentId);
 
   const { width, startResizing } = useResizable({
     initialWidth: 260,
@@ -141,11 +141,7 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
   const handleClearCanvas = () => {
     // Immediate clear without confirmation dialog to avoid blocking UI events
     setLayout([]);
-    setSelectedItemId(null);
-  };
-
-  const handleUpdateItem = (id: string, updates: Partial<GridItemData>) => {
-      setLayout(prev => prev.map(item => item.i === id ? { ...item, ...updates } : item));
+    setSelectedComponentId(null);
   };
 
   const handlePageUpdate = (updates: Partial<Page>) => {
@@ -153,8 +149,6 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
           updatePage(activePageId, updates);
       }
   };
-
-  const selectedItem = layout.find(i => i.i === selectedItemId);
 
   return (
     <>
@@ -173,8 +167,8 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
                onItemConsumed={onItemConsumed}
                layout={layout}
                onLayoutChange={setLayout}
-               selectedItemId={selectedItemId}
-               onSelectItem={setSelectedItemId}
+               selectedItemId={selectedComponentId}
+               onSelectItem={setSelectedComponentId}
              />
           </div>
       </div>
@@ -190,7 +184,7 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
       <PropertyPanel 
         width={width} 
         selectedItem={selectedItem} 
-        onUpdate={handleUpdateItem}
+        onUpdate={updateLayoutItem}
         pageSettings={activePage}
         onPageUpdate={handlePageUpdate}
       />

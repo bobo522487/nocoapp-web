@@ -6,6 +6,8 @@ import { SchemaField } from '../../../types';
 import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
+import { Switch } from "../../../components/ui/switch";
+import { Checkbox } from "../../../components/ui/checkbox";
 
 // --- Mock Data Store ---
 const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
@@ -190,8 +192,11 @@ const DataPage: React.FC = () => {
           accessorKey: 'isPrimary',
           width: 80,
           renderCell: (row) => (
-              <div className="flex justify-center w-full cursor-pointer" onClick={(e) => { e.stopPropagation(); handleSchemaChange(row.id, 'isPrimary', !row.isPrimary); }}>
-                  {row.isPrimary ? <CheckCircle2 size={16} className="text-blue-500" /> : <div className="w-4 h-4 rounded-full border border-input"></div>}
+              <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox 
+                    checked={row.isPrimary} 
+                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isPrimary', !!checked)} 
+                  />
               </div>
           )
       },
@@ -201,13 +206,11 @@ const DataPage: React.FC = () => {
           accessorKey: 'isNullable',
           width: 80,
           renderCell: (row) => (
-              <div className="flex justify-center w-full">
-                  <div 
-                    className={`w-8 h-4 rounded-full p-0.5 flex items-center cursor-pointer transition-colors ${row.isNullable ? 'bg-primary' : 'bg-muted'}`}
-                    onClick={(e) => { e.stopPropagation(); handleSchemaChange(row.id, 'isNullable', !row.isNullable); }}
-                  >
-                    <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${row.isNullable ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </div>
+              <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                  <Switch 
+                    checked={row.isNullable} 
+                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isNullable', checked)}
+                  />
               </div>
           )
       },
@@ -283,6 +286,7 @@ const DataPage: React.FC = () => {
       </div>
     
       <DataGrid 
+          key={`${activeTableId}-${viewMode}`}
           title={activeTableId}
           columns={viewMode === 'MODEL' ? modelColumns : dataColumns}
           data={viewMode === 'MODEL' ? schema : records}

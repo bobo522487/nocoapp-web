@@ -6,8 +6,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
-import { Input } from "./ui/input";
+} from "../components/ui/table";
+import { Checkbox } from "./ui/checkbox";
 
 export interface ColumnDef<T> {
   id: string;
@@ -83,21 +83,26 @@ const DataTable = <T extends { [key: string]: any }>({
     }
   };
 
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
     if (!onSelectionChange) return;
-    if (e.target.checked) {
+    if (checked === true) {
       onSelectionChange(data.map(d => d[keyField]));
     } else {
       onSelectionChange([]);
     }
   };
 
-  const handleSelectRow = (id: string | number) => {
+  const handleSelectRow = (id: string | number, checked: boolean | 'indeterminate') => {
     if (!onSelectionChange) return;
-    const newSelected = selectedIds.includes(id)
-      ? selectedIds.filter(sid => sid !== id)
-      : [...selectedIds, id];
-    onSelectionChange(newSelected);
+    
+    // Logic: if checked is true and not selected, add. If checked is false and selected, remove.
+    const isSelected = selectedIds.includes(id);
+    
+    if (checked === true && !isSelected) {
+        onSelectionChange([...selectedIds, id]);
+    } else if (checked === false && isSelected) {
+        onSelectionChange(selectedIds.filter(sid => sid !== id));
+    }
   };
 
   const isAllSelected = data.length > 0 && selectedIds.length === data.length;
@@ -109,15 +114,12 @@ const DataTable = <T extends { [key: string]: any }>({
         <TableHeader className="sticky top-0 bg-background z-10 backdrop-blur-sm">
           <TableRow className="hover:bg-transparent border-border">
             {enableSelection && (
-              <TableHead className="w-10 px-3 text-center">
-                 <input
-                   type="checkbox"
-                   className="appearance-none h-4 w-4 rounded border border-input bg-background checked:bg-primary checked:border-primary checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2.5-2.5a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')] bg-center bg-no-repeat focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
-                   checked={isAllSelected}
-                   ref={input => {
-                       if (input) input.indeterminate = isIndeterminate;
-                   }}
-                   onChange={handleSelectAll}
+              <TableHead className="w-10 px-3 text-center align-middle">
+                 <Checkbox
+                   checked={isAllSelected ? true : isIndeterminate ? "indeterminate" : false}
+                   onCheckedChange={handleSelectAll}
+                   aria-label="Select all"
+                   className="translate-y-[2px]"
                  />
               </TableHead>
             )}
@@ -148,16 +150,13 @@ const DataTable = <T extends { [key: string]: any }>({
                 data-state={isSelected ? "selected" : undefined}
               >
                 {enableSelection && (
-                    <TableCell className="w-10 px-3 py-1 text-center">
-                       <input
-                         type="checkbox"
-                         className="appearance-none h-4 w-4 rounded border border-input bg-background checked:bg-primary checked:border-primary checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2.5-2.5a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')] bg-center bg-no-repeat focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                    <TableCell className="w-10 px-3 py-1 text-center align-middle">
+                       <Checkbox
                          checked={isSelected}
-                         onChange={(e) => {
-                             e.stopPropagation();
-                             handleSelectRow(rowId);
-                         }}
+                         onCheckedChange={(checked) => handleSelectRow(rowId, checked)}
                          onClick={(e) => e.stopPropagation()}
+                         aria-label="Select row"
+                         className="translate-y-[2px]"
                        />
                     </TableCell>
                 )}

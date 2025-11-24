@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { 
     Plus, 
@@ -33,13 +34,14 @@ const PagesPanel = () => {
       activePageId, 
       addPage, 
       deletePage, 
-      layouts, 
+      pageLayouts, 
       selectedComponentId, 
       setSelectedComponentId 
   } = useAppStore();
 
-  // Use LG layout for outline view source of truth
-  const desktopLayout = layouts['lg'] || [];
+  // Use LG layout of current page for outline view source of truth
+  const currentLayouts = pageLayouts[activePageId] || { lg: [] };
+  const desktopLayout = currentLayouts['lg'] || [];
 
   const [activeMenuPage, setActiveMenuPage] = useState<string | null>(null);
   const [showComponents, setShowComponents] = useState(false);

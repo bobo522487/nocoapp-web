@@ -22,8 +22,9 @@ interface AppState {
   setActiveTableId: (id: string) => void;
 
   // App Builder / Layout State
-  layouts: Record<string, GridItemData[]>;
+  pageLayouts: Record<string, Record<string, GridItemData[]>>;
   selectedComponentId: string | null;
+  
   setLayouts: (layouts: Record<string, GridItemData[]>) => void;
   setSelectedComponentId: (id: string | null) => void;
   updateLayoutItem: (id: string, updates: Partial<GridItemData>) => void;
@@ -43,6 +44,13 @@ const INITIAL_LAYOUT: GridItemData[] = [
   { i: 'list1', x: 8, y: 3, w: 4, h: 8, type: 'table', title: 'Recent Sales', content: {} },
 ];
 
+// Initial layouts per page
+const INITIAL_PAGE_LAYOUTS: Record<string, Record<string, GridItemData[]>> = {
+  'page-1': { lg: INITIAL_LAYOUT },
+  'page-2': { lg: [] },
+  'page-3': { lg: [] },
+};
+
 export const useAppStore = create<AppState>((set) => ({
   isDarkMode: true,
   activeView: ViewMode.HOME,
@@ -58,32 +66,57 @@ export const useAppStore = create<AppState>((set) => ({
   })),
   addPage: (page) => set((state) => ({ 
     pages: [...state.pages, page],
-    activePageId: page.id 
+    activePageId: page.id,
+    pageLayouts: {
+        ...state.pageLayouts,
+        [page.id]: { lg: [] } // Initialize empty layout for new page
+    }
   })),
-  deletePage: (id) => set((state) => ({ 
-    pages: state.pages.filter(p => p.id !== id),
-    activePageId: state.activePageId === id && state.pages.length > 1 
-        ? state.pages.find(p => p.id !== id)?.id || '' // Fallback to another page
-        : state.activePageId
-  })),
+  deletePage: (id) => set((state) => {
+    // Remove layout data for deleted page
+    const { [id]: removed, ...remainingLayouts } = state.pageLayouts;
+    return { 
+        pages: state.pages.filter(p => p.id !== id),
+        activePageId: state.activePageId === id && state.pages.length > 1 
+            ? state.pages.find(p => p.id !== id)?.id || ''
+            : state.activePageId,
+        pageLayouts: remainingLayouts
+    };
+  }),
 
   // Data State
   activeTableId: 'users',
   setActiveTableId: (id) => set({ activeTableId: id }),
 
   // Layout State Implementation
-  layouts: { lg: INITIAL_LAYOUT }, // Initialize with desktop layout
+  pageLayouts: INITIAL_PAGE_LAYOUTS,
   selectedComponentId: null,
-  setLayouts: (layouts) => set({ layouts }),
+  
+  setLayouts: (newLayouts) => set((state) => ({
+    pageLayouts: {
+        ...state.pageLayouts,
+        [state.activePageId]: newLayouts
+    }
+  })),
+  
   setSelectedComponentId: (id) => set({ selectedComponentId: id }),
+  
   updateLayoutItem: (id, updates) => set((state) => {
-    // Update the item in ALL breakpoints to keep content/properties in sync across devices
-    const newLayouts: Record<string, GridItemData[]> = {};
-    Object.keys(state.layouts).forEach(bp => {
-        newLayouts[bp] = state.layouts[bp].map(item => 
+    const currentPageLayouts = state.pageLayouts[state.activePageId] || { lg: [] };
+    const newPageLayouts: Record<string, GridItemData[]> = {};
+    
+    // Update item across all breakpoints for the current page
+    Object.keys(currentPageLayouts).forEach(bp => {
+        newPageLayouts[bp] = currentPageLayouts[bp].map(item => 
           item.i === id ? { ...item, ...updates } : item
         );
     });
-    return { layouts: newLayouts };
+
+    return { 
+        pageLayouts: {
+            ...state.pageLayouts,
+            [state.activePageId]: newPageLayouts
+        }
+    };
   }),
 }));

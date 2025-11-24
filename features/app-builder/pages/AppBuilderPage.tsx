@@ -118,7 +118,7 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
       pages, 
       activePageId, 
       updatePage,
-      layouts,
+      pageLayouts,
       setLayouts,
       selectedComponentId,
       setSelectedComponentId,
@@ -127,8 +127,9 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
   
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
-  // Derived active page
+  // Derived active page and layout
   const activePage = pages.find(p => p.id === activePageId);
+  const layouts = pageLayouts[activePageId] || { lg: [] };
   
   // Get selected item properties. We use the 'lg' (desktop) layout as the source of truth for component metadata.
   const selectedItem = layouts['lg']?.find(i => i.i === selectedComponentId) || null;
@@ -141,7 +142,7 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
   });
 
   const handleClearCanvas = () => {
-    // Clear layouts for all breakpoints
+    // Clear layouts for all breakpoints for the current page
     setLayouts({ lg: [] });
     setSelectedComponentId(null);
   };

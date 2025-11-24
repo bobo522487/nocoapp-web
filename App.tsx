@@ -12,12 +12,12 @@ import { useResizable } from './hooks/useResizable';
 import { ColumnDef } from './components/DataTable';
 
 const MOCK_SCHEMA: SchemaField[] = [
-  { id: 'id', name: 'ID', type: 'number', defaultValue: 'auto-inc', isPrimary: true, isNullable: false, width: 60 },
-  { id: 'name', name: 'Name', type: 'text', defaultValue: '', isPrimary: false, isNullable: false, width: 200, flex: true },
-  { id: 'email', name: 'Email', type: 'email', defaultValue: '', isPrimary: false, isNullable: true, width: 250, flex: true },
-  { id: 'role', name: 'Role', type: 'select', defaultValue: 'Viewer', isPrimary: false, isNullable: false, width: 140 },
-  { id: 'status', name: 'Status', type: 'status', defaultValue: 'Active', isPrimary: false, isNullable: false, width: 120 },
-  { id: 'created', name: 'Created At', type: 'date', defaultValue: 'now()', isPrimary: false, isNullable: false, width: 180 },
+  { id: 'id', name: 'ID', type: 'number', defaultValue: 'auto-inc', isPrimary: true, isUnique: true, isNullable: false, width: 60 },
+  { id: 'name', name: 'Name', type: 'text', defaultValue: '', isPrimary: false, isUnique: false, isNullable: false, width: 200, flex: true },
+  { id: 'email', name: 'Email', type: 'email', defaultValue: '', isPrimary: false, isUnique: true, isNullable: true, width: 250, flex: true },
+  { id: 'role', name: 'Role', type: 'select', defaultValue: 'Viewer', isPrimary: false, isUnique: false, isNullable: false, width: 140 },
+  { id: 'status', name: 'Status', type: 'status', defaultValue: 'Active', isPrimary: false, isUnique: false, isNullable: false, width: 120 },
+  { id: 'created', name: 'Created At', type: 'date', defaultValue: 'now()', isPrimary: false, isUnique: false, isNullable: false, width: 180 },
 ];
 
 const MOCK_DATA: any[] = [

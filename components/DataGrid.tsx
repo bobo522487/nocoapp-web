@@ -386,18 +386,18 @@ function DataGrid<T>({
                         <div 
                             key={field.id}
                             onClick={() => {
-                                if (sort?.fieldId === field.accessorKey) {
+                                if (sort && sort.fieldId === field.accessorKey) {
                                     setSort(sort.direction === 'asc' ? { ...sort, direction: 'desc' } : null);
-                                } else {
+                                } else if (field.accessorKey) {
                                     setSort({ fieldId: field.accessorKey as string, direction: 'asc' });
                                 }
                             }}
-                            className={`flex items-center justify-between px-2 py-1.5 hover:bg-muted rounded cursor-pointer text-xs transition-colors ${sort?.fieldId === field.accessorKey ? 'text-primary font-medium' : 'text-foreground'}`}
+                            className={`flex items-center justify-between px-2 py-1.5 hover:bg-muted rounded cursor-pointer text-xs transition-colors ${sort?.fieldId === field.accessorKey ? 'text-primary font-medium' : 'text-foreground'} ${!field.accessorKey ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             <div className="flex items-center gap-2">
                                 <span>{field.header}</span>
                             </div>
-                            {sort?.fieldId === field.accessorKey && (
+                            {sort && sort.fieldId === field.accessorKey && (
                                 sort.direction === 'asc' ? <ArrowUpAZ size={14} /> : <ArrowDownAZ size={14} />
                             )}
                         </div>

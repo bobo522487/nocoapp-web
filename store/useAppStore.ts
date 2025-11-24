@@ -2,14 +2,17 @@ import { create } from 'zustand';
 import { ViewMode, Page, GridItemData, DbTable } from '../types';
 
 export type AppTheme = 'vercel' | 'supabase' | 'slack' | 'vscode';
+export type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
 interface AppState {
   isDarkMode: boolean;
   theme: AppTheme;
   activeView: ViewMode;
+  activeDevice: DeviceType;
   toggleTheme: () => void;
   setAppTheme: (theme: AppTheme) => void;
   setActiveView: (view: ViewMode) => void;
+  setActiveDevice: (device: DeviceType) => void;
   
   // Page State
   pages: Page[];
@@ -70,9 +73,11 @@ export const useAppStore = create<AppState>((set) => ({
   isDarkMode: true,
   theme: 'vercel',
   activeView: ViewMode.HOME,
+  activeDevice: 'desktop',
   toggleTheme: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
   setAppTheme: (theme) => set({ theme }),
   setActiveView: (view) => set({ activeView: view }),
+  setActiveDevice: (device) => set({ activeDevice: device }),
 
   pages: INITIAL_PAGES,
   activePageId: 'page-1',

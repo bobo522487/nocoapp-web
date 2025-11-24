@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import ActivityBar from '../components/layout/ActivityBar';
@@ -8,7 +9,7 @@ import Header from '../components/layout/Header';
 import AppBuilderPage from '../features/app-builder/pages/AppBuilderPage';
 import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import { INITIAL_FILES } from '../constants';
-import { FileSystemNode, FileType, ViewMode, Tab } from '../types';
+import { FileSystemNode, FileType, ViewMode, Tab, SchemaField } from '../types';
 import { useResizable } from '../hooks/useResizable';
 import { useAppStore } from '../store/useAppStore';
 import { 

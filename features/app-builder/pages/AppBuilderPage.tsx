@@ -122,17 +122,27 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
       setLayouts,
       selectedComponentId,
       setSelectedComponentId,
-      updateLayoutItem
+      updateLayoutItem,
+      activeDevice,
+      setActiveDevice
   } = useAppStore();
   
-  const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-
   // Derived active page and layout
   const activePage = pages.find(p => p.id === activePageId);
   const layouts = pageLayouts[activePageId] || { lg: [] };
   
-  // Get selected item properties. We use the 'lg' (desktop) layout as the source of truth for component metadata.
-  const selectedItem = layouts['lg']?.find(i => i.i === selectedComponentId) || null;
+  // Get selected item properties. We use the 'lg' (desktop) layout as the source of truth for component metadata in panel for now, 
+  // or ideally the currently active layout.
+  // Map activeDevice to layout key to find the item in the current view
+  const getLayoutKey = (dev: string) => {
+      switch(dev) {
+          case 'mobile': return 'xxs';
+          case 'tablet': return 'sm';
+          default: return 'lg';
+      }
+  };
+  const currentKey = getLayoutKey(activeDevice);
+  const selectedItem = (layouts[currentKey] || layouts['lg'])?.find(i => i.i === selectedComponentId) || null;
 
   const { width, startResizing } = useResizable({
     initialWidth: 260,
@@ -157,14 +167,14 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
     <>
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden">
           <AppToolbar 
-            device={device} 
-            setDevice={setDevice} 
+            device={activeDevice} 
+            setDevice={setActiveDevice} 
             onClearCanvas={handleClearCanvas} 
             pageName={activePage?.name || 'Page'}
           />
           <div className="flex-1 flex overflow-hidden relative">
              <Canvas 
-               device={device} 
+               device={activeDevice} 
                draggedItem={draggedItem}
                droppedItem={droppedItem}
                onItemConsumed={onItemConsumed}

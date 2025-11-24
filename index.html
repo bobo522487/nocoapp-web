@@ -19,7 +19,7 @@
     <style>
       @layer base {
         :root {
-          /* Zinc-like Light Theme */
+          /* Default (Vercel/Zinc) Light Theme */
           --background: 0 0% 100%;
           --foreground: 240 10% 3.9%;
           --card: 0 0% 100%;
@@ -43,7 +43,7 @@
         }
   
         .dark {
-          /* Zinc-like Dark Theme */
+          /* Default (Vercel/Zinc) Dark Theme */
           --background: 240 10% 3.9%;
           --foreground: 0 0% 98%;
           --card: 240 10% 3.9%;
@@ -64,10 +64,65 @@
           --input: 240 3.7% 15.9%;
           --ring: 240 4.9% 83.9%;
         }
+
+        /* --- Supabase Theme --- */
+        .theme-supabase {
+          --primary: 154 55% 45%;
+          --primary-foreground: 0 0% 100%;
+          --ring: 154 55% 45%;
+        }
+        .theme-supabase.dark {
+          --background: 240 5% 10%;
+          --card: 240 5% 12%;
+          --popover: 240 5% 10%;
+          --primary: 154 60% 53%;
+          --primary-foreground: 154 60% 5%;
+          --secondary: 240 4% 16%;
+          --muted: 240 4% 16%;
+          --border: 240 4% 18%;
+          --input: 240 4% 18%;
+          --ring: 154 60% 53%;
+        }
+
+        /* --- Slack Theme --- */
+        .theme-slack {
+          --primary: 295 50% 30%; /* Aubergine */
+          --primary-foreground: 0 0% 100%;
+          --ring: 295 50% 30%;
+        }
+        .theme-slack.dark {
+          --background: 295 20% 8%;
+          --primary: 295 50% 60%; /* Lighter purple for dark mode */
+          --primary-foreground: 295 50% 10%;
+          --sidebar-bg: 295 25% 15%;
+          --ring: 295 50% 60%;
+        }
+
+        /* --- VS Code Theme --- */
+        .theme-vscode {
+          --primary: 210 100% 40%; /* VS Code Blue */
+          --primary-foreground: 0 0% 100%;
+          --ring: 210 100% 40%;
+        }
+        .theme-vscode.dark {
+          --background: 220 15% 10%; /* #1e1e1e approx */
+          --foreground: 220 10% 85%;
+          --card: 220 15% 13%;
+          --popover: 220 15% 10%;
+          --primary: 210 100% 45%;
+          --primary-foreground: 0 0% 100%;
+          --secondary: 220 15% 18%;
+          --muted: 220 15% 18%;
+          --muted-foreground: 220 10% 60%;
+          --accent: 220 15% 20%;
+          --border: 220 15% 18%;
+          --input: 220 15% 18%;
+          --ring: 210 100% 45%;
+        }
       }
 
       body {
-        @apply bg-background text-foreground antialiased;
+        @apply bg-background text-foreground antialiased transition-colors duration-300;
         font-feature-settings: "rlig" 1, "calt" 1;
       }
 

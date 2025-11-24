@@ -125,7 +125,7 @@ const MainLayout: React.FC<{
 
 const App: React.FC = () => {
   // State from Zustand Store
-  const { isDarkMode, pages, activeTableId } = useAppStore();
+  const { isDarkMode, theme, pages, activeTableId } = useAppStore();
 
   // Local State
   const [files, setFiles] = useState<FileSystemNode[]>(INITIAL_FILES);
@@ -159,12 +159,21 @@ const App: React.FC = () => {
 
   // Initialize Theme (using store value)
   useEffect(() => {
+    const root = document.documentElement;
+    
+    // Handle Dark Mode
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
     }
-  }, [isDarkMode]);
+
+    // Handle Themes
+    root.classList.remove('theme-slack', 'theme-supabase', 'theme-vscode', 'theme-vercel');
+    if (theme && theme !== 'vercel') {
+        root.classList.add(`theme-${theme}`);
+    }
+  }, [isDarkMode, theme]);
 
   // Helper to find node by ID (recursive)
   const findNode = useCallback((nodes: FileSystemNode[], id: string): FileSystemNode | null => {

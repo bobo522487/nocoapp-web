@@ -70,7 +70,13 @@ const SelectControl = ({ value, options, onChange }: { value: string, options: s
   </select>
 );
 
-const ToggleControl = ({ label, checked = false, onChange }: { label: string, checked?: boolean, onChange?: (val: boolean) => void }) => {
+interface ToggleControlProps {
+  label: string;
+  checked?: boolean;
+  onChange?: (val: boolean) => void;
+}
+
+const ToggleControl: React.FC<ToggleControlProps> = ({ label, checked = false, onChange }) => {
     const [internalChecked, setInternalChecked] = useState(checked);
     const isChecked = onChange ? checked : internalChecked;
 
@@ -113,7 +119,14 @@ const ColorPickerControl = ({ label, color, colorLabel }: { label: string, color
     </div>
 );
 
-const Accordion = ({ title, children, defaultOpen = true, icon: Icon }: { title: string, children?: React.ReactNode, defaultOpen?: boolean, icon?: any }) => {
+interface AccordionProps {
+  title: string;
+  children?: React.ReactNode;
+  defaultOpen?: boolean;
+  icon?: any;
+}
+
+const Accordion: React.FC<AccordionProps> = ({ title, children, defaultOpen = true, icon: Icon }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (

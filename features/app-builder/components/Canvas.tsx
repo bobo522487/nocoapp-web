@@ -310,7 +310,11 @@ const Canvas: React.FC<CanvasProps> = ({
                                 e.stopPropagation();
                                 if (onSelectItem) onSelectItem(item.i);
                             }}
-                            className={`bg-card border rounded-lg shadow-sm transition-all group overflow-hidden ${isSelected ? 'ring-2 ring-blue-500 border-blue-500 z-50' : 'border-border hover:border-blue-300'}`}
+                            className={`bg-card border rounded-lg transition-all duration-200 ease-in-out group overflow-hidden ${
+                                isSelected 
+                                ? 'border-primary shadow-md z-50' 
+                                : 'border-border/60 hover:border-primary hover:shadow-sm'
+                            }`}
                           >
                               <div className="drag-handle absolute top-2 left-2 z-50 p-1 rounded-sm cursor-grab active:cursor-grabbing hover:bg-muted bg-background/80 border border-border backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
                                   <GripVertical size={14} className="text-muted-foreground" />

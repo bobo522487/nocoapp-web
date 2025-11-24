@@ -285,16 +285,29 @@ const DataPage: React.FC = () => {
           </div>
       </div>
     
-      <DataGrid 
-          key={`${activeTableId}-${viewMode}`}
-          title={activeTableId}
-          columns={viewMode === 'MODEL' ? modelColumns : dataColumns}
-          data={viewMode === 'MODEL' ? schema : records}
-          onAdd={viewMode === 'MODEL' ? handleSchemaAdd : handleDataAdd}
-          onEdit={viewMode === 'MODEL' ? handleSchemaChange : handleDataChange}
-          onDelete={viewMode === 'MODEL' ? handleSchemaDelete : handleDataDelete}
-          keyField="id"
-      />
+      {viewMode === 'MODEL' ? (
+          <DataGrid<SchemaField>
+            key={`${activeTableId}-MODEL`}
+            title={activeTableId}
+            columns={modelColumns}
+            data={schema}
+            onAdd={handleSchemaAdd}
+            onEdit={handleSchemaChange}
+            onDelete={handleSchemaDelete}
+            keyField="id"
+          />
+      ) : (
+          <DataGrid<any>
+            key={`${activeTableId}-DATA`}
+            title={activeTableId}
+            columns={dataColumns}
+            data={records}
+            onAdd={handleDataAdd}
+            onEdit={handleDataChange}
+            onDelete={handleDataDelete}
+            keyField="id"
+          />
+      )}
     </div>
   );
 };

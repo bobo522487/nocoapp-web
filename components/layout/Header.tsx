@@ -1,12 +1,21 @@
-import React from 'react';
-import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks, Palette, Check, Triangle, Database, MessageSquare, Code } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { useAppStore } from '../../store/useAppStore';
+import { useAppStore, AppTheme } from '../../store/useAppStore';
+import Dropdown from '../common/Dropdown';
 
 const Header: React.FC = () => {
-  const { activeView, isDarkMode, toggleTheme } = useAppStore();
+  const { activeView, isDarkMode, toggleTheme, theme, setAppTheme } = useAppStore();
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+
+  const themes: { id: AppTheme; label: string; icon: any }[] = [
+    { id: 'vercel', label: 'Vercel (Default)', icon: Triangle },
+    { id: 'supabase', label: 'Supabase', icon: Database },
+    { id: 'slack', label: 'Slack', icon: MessageSquare },
+    { id: 'vscode', label: 'VS Code', icon: Code },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,6 +41,34 @@ const Header: React.FC = () => {
             <Input 
               className="h-8 pl-8 text-xs bg-muted/50 border-input focus-visible:ring-1 focus-visible:ring-offset-0" 
               placeholder="Search... (⌘K)" 
+            />
+          </div>
+
+          <div className="relative">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                onClick={() => setIsThemeOpen(!isThemeOpen)}
+            >
+                <Palette size={18} />
+            </Button>
+            
+            <Dropdown 
+                open={isThemeOpen}
+                onOpenChange={setIsThemeOpen}
+                triggerLabel=""
+                className="hidden" // Hidden trigger because we use the button above
+                items={themes.map(t => ({
+                    id: t.id,
+                    label: t.label,
+                    icon: t.icon,
+                    group: 'Themes'
+                }))}
+                onSelect={(item) => setAppTheme(item.id as AppTheme)}
+                width={180}
+                selectedId={theme}
+                searchPlaceholder="Select theme..."
             />
           </div>
 

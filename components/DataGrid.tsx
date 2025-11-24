@@ -100,7 +100,7 @@ const ToolbarPopover: React.FC<ToolbarPopoverProps> = ({ isOpen, onClose, trigge
   );
 };
 
-const DataGrid = <T extends { [key: string]: any }>({ 
+function DataGrid<T>({ 
     data,
     columns,
     onAdd,
@@ -108,7 +108,7 @@ const DataGrid = <T extends { [key: string]: any }>({
     onDelete,
     title,
     keyField = "id" as keyof T
-}: DataGridProps<T>) => {
+}: DataGridProps<T>) {
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   
   // Menu States
@@ -141,7 +141,7 @@ const DataGrid = <T extends { [key: string]: any }>({
     if (filters.length > 0) {
         result = result.filter(record => {
             return filters.every(filter => {
-                const val = String(record[filter.fieldId] || '').toLowerCase();
+                const val = String((record as any)[filter.fieldId] || '').toLowerCase();
                 const filterVal = filter.value.toLowerCase();
                 
                 switch (filter.operator) {
@@ -158,8 +158,8 @@ const DataGrid = <T extends { [key: string]: any }>({
     // 2. Sort
     if (sort) {
         result.sort((a, b) => {
-            const valA = a[sort.fieldId];
-            const valB = b[sort.fieldId];
+            const valA = (a as any)[sort.fieldId];
+            const valB = (b as any)[sort.fieldId];
             
             if (valA === valB) return 0;
             

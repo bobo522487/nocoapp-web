@@ -24,7 +24,7 @@ export const InputWidget: WidgetDefinition = {
     name: 'Input',
     icon: TextCursor,
     category: 'Commonly used',
-    defaultSize: { w: 4, h: 3 },
+    defaultSize: { w: 12, h: 2 },
     properties: [
       {
         group: 'General',

@@ -1,40 +1,82 @@
-import React from 'react';
-import { LayoutGrid, Database, Plus, MoreHorizontal, Pencil, Play } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { LayoutGrid, Database, Plus, MoreVertical, Search, Box } from 'lucide-react';
 import { ViewMode } from '../../../types';
 import { Button } from "../../../components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import { Separator } from "../../../components/ui/separator";
+import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
 
 const DashboardPage: React.FC = () => {
   const { setActiveView } = useAppStore();
+  const [activeMenuAppId, setActiveMenuAppId] = useState<string | null>(null);
+  const [activeMenuSourceId, setActiveMenuSourceId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenuAppId(null);
+        setActiveMenuSourceId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Mock Data
   const apps = [
     {
       id: 'app-1',
       name: 'Order Management System',
-      description: 'Internal tool for managing customer orders and inventory.',
-      lastEdited: '15 days ago',
+      slug: 'order-mgmt-sys',
+      description: 'Internal tool for managing customer orders.',
+      lastEdited: '15d ago',
       color: 'bg-blue-500',
-      pages: ['Dashboard', 'Orders', 'Customers', 'Inventory']
+      pages: ['Dashboard', 'Orders'],
+      isPublic: false
     },
     {
       id: 'app-2',
       name: 'CRM Dashboard',
-      description: 'Customer relationship management and tracking.',
-      lastEdited: '12 days ago',
+      slug: 'crm-dashboard',
+      description: 'Customer relationship management.',
+      lastEdited: '12d ago',
       color: 'bg-purple-500',
-      pages: ['Leads', 'Opportunities', 'Contacts', 'Reports']
+      pages: ['Leads', 'Opportunities'],
+      isPublic: true
     },
     {
       id: 'app-3',
       name: 'Employee Portal',
-      description: 'HR portal for leave requests and payslips.',
-      lastEdited: '3 days ago',
+      slug: 'employee-portal',
+      description: 'HR portal for leave requests.',
+      lastEdited: '3d ago',
       color: 'bg-green-500',
-      pages: ['Home', 'Profile', 'Leave Request']
+      pages: ['Home', 'Profile'],
+      isPublic: false
+    },
+    {
+      id: 'app-4',
+      name: 'E-commerce Frontend',
+      slug: 'ecommerce-frontend',
+      description: 'Store with cart and checkout.',
+      lastEdited: '5h ago',
+      color: 'bg-orange-500',
+      pages: ['Home', 'Product'],
+      isPublic: true
+    },
+    {
+      id: 'app-5',
+      name: 'Inventory Tracker',
+      slug: 'inventory-tracker',
+      description: 'Warehouse stock monitoring.',
+      lastEdited: '1h ago',
+      color: 'bg-red-500',
+      pages: ['Stock', 'Alerts'],
+      isPublic: false
     }
   ];
 
@@ -43,15 +85,15 @@ const DashboardPage: React.FC = () => {
       id: 'src-1',
       name: 'nocoapp-db',
       type: 'PostgreSQL',
-      lastEdited: '2 days ago',
-      color: 'bg-orange-500',
+      lastEdited: '2d ago',
+      color: 'bg-cyan-500',
       tables: ['users', 'orders', 'products', 'inventory_logs']
     },
     {
       id: 'src-2',
       name: 'production-analytics',
       type: 'MySQL',
-      lastEdited: '5 days ago',
+      lastEdited: '5d ago',
       color: 'bg-indigo-500',
       tables: ['audit_trail', 'page_views', 'events']
     }
@@ -59,156 +101,205 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-y-auto transition-colors">
-      <div className="container max-w-7xl mx-auto py-10 px-6">
+      <div className="container max-w-[1600px] mx-auto py-8 px-6">
         
         {/* Hero / Welcome Section */}
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Welcome back, Developer</h1>
-          <p className="text-muted-foreground text-lg">Select an application or data source to start building.</p>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mb-2">Welcome back, Developer</h1>
+          <p className="text-muted-foreground text-base">Select an application or data source to start building.</p>
         </div>
 
         {/* Applications Section */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-md">
-                    <LayoutGrid className="text-primary" size={20} />
-                  </div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-foreground">Applications</h2>
+                  <h2 className="text-lg font-semibold text-foreground">All Applications</h2>
+                  <Badge variant="secondary" className="text-xs font-normal bg-muted text-muted-foreground hover:bg-muted">{apps.length}</Badge>
               </div>
-              <Button 
-                  onClick={() => setActiveView(ViewMode.APPS)}
-              >
-                  New Application <Plus size={16} className="ml-2" />
-              </Button>
+              
+              <div className="flex items-center gap-3">
+                  <div className="relative w-64 hidden sm:block">
+                      <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input placeholder="Search applications..." className="h-8 pl-8 text-xs bg-muted/30" />
+                  </div>
+                  <Button size="sm" onClick={() => setActiveView(ViewMode.APPS)} className="h-8 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white">
+                      <Plus size={14} className="mr-1.5" /> New Application
+                  </Button>
+              </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {apps.map(app => (
-                  <Card key={app.id} className="hover:shadow-lg hover:border-primary/50 transition-all duration-300 group flex flex-col bg-card">
-                      <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                              <div className={`w-10 h-10 rounded-lg ${app.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-inset ring-black/5`}>
-                                  <LayoutGrid size={20} className={app.color.replace('bg-', 'text-')} />
-                              </div>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                  <MoreHorizontal size={16} />
-                              </Button>
-                          </div>
-                          <CardTitle 
-                              className="text-xl mt-4 cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => setActiveView(ViewMode.APPS)}
-                          >
-                              {app.name}
-                          </CardTitle>
-                          <CardDescription className="line-clamp-2 mt-2 text-sm leading-relaxed">
-                              {app.description}
-                          </CardDescription>
-                      </CardHeader>
+                  <div 
+                    key={app.id} 
+                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
+                    onClick={() => setActiveView(ViewMode.APPS)}
+                  >
+                    {/* Header */}
+                    <div>
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                                {/* Adjusted Icon Size 16x16 inside a small container */}
+                                <div className={`w-6 h-6 rounded flex items-center justify-center ${app.color} bg-opacity-10 transition-colors`}>
+                                    <LayoutGrid size={16} className={app.color.replace('bg-', 'text-')} />
+                                </div>
+                                {/* Name Only */}
+                                <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight">{app.name}</span>
+                            </div>
+                            
+                            <div className="relative">
+                                <button 
+                                    className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setActiveMenuAppId(activeMenuAppId === app.id ? null : app.id);
+                                        setActiveMenuSourceId(null);
+                                    }}
+                                >
+                                    <MoreVertical size={16} />
+                                </button>
 
-                      <CardContent className="pb-3 flex-1">
-                          <div className="flex items-center gap-2 mt-2">
-                              {app.pages.slice(0, 3).map(page => (
-                                <Badge key={page} variant="secondary" className="text-[10px] font-normal">{page}</Badge>
-                              ))}
-                              {app.pages.length > 3 && <Badge variant="secondary" className="text-[10px] font-normal">+{app.pages.length - 3}</Badge>}
-                          </div>
-                      </CardContent>
+                                {/* Action Menu Popover */}
+                                {activeMenuAppId === app.id && (
+                                    <div 
+                                        ref={menuRef} 
+                                        className="absolute right-0 top-6 w-48 bg-popover border border-border rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+                                        onClick={(e) => e.stopPropagation()}
+                                        data-cy="card-options"
+                                    >
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="rename-app-card-option">
+                                            <span className="text-xs font-medium">Rename app</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="change-icon-card-option">
+                                            <span className="text-xs font-medium">Change Icon</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="add-to-folder-card-option">
+                                            <span className="text-xs font-medium">Add to folder</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="clone-app-card-option">
+                                            <span className="text-xs font-medium">Clone app</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="export-app-card-option">
+                                            <span className="text-xs font-medium">Export app</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 text-destructive rounded-md cursor-pointer" role="button" data-cy="delete-app-card-option">
+                                            <span className="text-xs font-medium">Delete app</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-                      <CardFooter className="pt-4 border-t bg-muted/30 text-xs text-muted-foreground flex justify-between items-center">
-                          <span>Edited {app.lastEdited}</span>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2"
-                                  onClick={() => setActiveView(ViewMode.APPS)}
-                              >
-                                  <Pencil size={12} className="mr-1" /> Edit
-                              </Button>
-                              <Button 
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2"
-                              >
-                                  <Play size={12} className="mr-1" /> Launch
-                              </Button>
-                          </div>
-                      </CardFooter>
-                  </Card>
+                    {/* Footer / Stats */}
+                    <div className="flex items-center justify-between mt-auto pt-3">
+                        <div className="text-[11px] text-muted-foreground font-medium">
+                             <span>Edited {app.lastEdited}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                            <Box size={11} />
+                            <span>Application</span>
+                        </div>
+                    </div>
+                  </div>
               ))}
+              
+              {/* New Application Placeholder Card */}
+              <div 
+                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
+                onClick={() => setActiveView(ViewMode.APPS)}
+              >
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
+                      <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Create New Application</span>
+              </div>
           </div>
         </div>
-
-        <Separator className="my-10" />
 
         {/* Data Sources Section */}
         <div>
           <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-md">
-                    <Database className="text-primary" size={20} />
-                  </div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-foreground">Data Sources</h2>
+                  <h2 className="text-lg font-semibold text-foreground">Data Sources</h2>
+                  <Badge variant="secondary" className="text-xs font-normal bg-muted text-muted-foreground hover:bg-muted">{dataSources.length}</Badge>
               </div>
               <Button 
                   variant="outline"
+                  size="sm"
+                  className="h-8 text-xs font-medium"
                   onClick={() => setActiveView(ViewMode.DATA)}
               >
-                  Connect Data <Plus size={16} className="ml-2" />
+                  Connect Data <Plus size={14} className="ml-1.5" />
               </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {dataSources.map(src => (
-                  <Card key={src.id} className="hover:shadow-lg hover:border-primary/50 transition-all duration-300 group flex flex-col bg-card">
-                      <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start">
-                              <div className={`w-10 h-10 rounded-lg ${src.color} bg-opacity-10 flex items-center justify-center text-white shadow-sm ring-1 ring-inset ring-black/5`}>
-                                  <Database size={20} className={src.color.replace('bg-', 'text-')} />
+                  <div 
+                    key={src.id} 
+                    className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
+                    onClick={() => setActiveView(ViewMode.DATA)}
+                  >
+                      {/* Header */}
+                      <div>
+                          <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                    <div className={`w-6 h-6 rounded flex items-center justify-center ${src.color} bg-opacity-10 transition-colors`}>
+                                        <Database size={16} className={src.color.replace('bg-', 'text-')} />
+                                    </div>
+                                    <span className="font-medium text-sm text-foreground truncate max-w-[140px] leading-tight">{src.name}</span>
                               </div>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                  <MoreHorizontal size={16} />
-                              </Button>
-                          </div>
-                          <CardTitle 
-                              className="text-xl mt-4 cursor-pointer hover:text-primary transition-colors"
-                              onClick={() => setActiveView(ViewMode.DATA)}
-                          >
-                              {src.name}
-                          </CardTitle>
-                          <div className="mt-2">
-                              <Badge variant="outline" className="font-mono text-xs">{src.type}</Badge>
-                          </div>
-                      </CardHeader>
-                      
-                      <CardContent className="pb-3 flex-1">
-                          <p className="text-sm text-muted-foreground">
-                              {src.tables.length} tables configured
-                          </p>
-                      </CardContent>
+                              
+                              <div className="relative">
+                                  <button 
+                                      className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-muted"
+                                      onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveMenuSourceId(activeMenuSourceId === src.id ? null : src.id);
+                                          setActiveMenuAppId(null);
+                                      }}
+                                  >
+                                      <MoreVertical size={16} />
+                                  </button>
 
-                      <CardFooter className="pt-4 border-t bg-muted/30 text-xs text-muted-foreground flex justify-between items-center">
-                          <span>Edited {src.lastEdited}</span>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2"
-                                  onClick={() => setActiveView(ViewMode.DATA)}
-                              >
-                                  <Pencil size={12} className="mr-1" /> Edit
-                              </Button>
-                              <Button 
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2"
-                              >
-                                  <Database size={12} className="mr-1" /> View
-                              </Button>
+                                  {/* Action Menu Popover */}
+                                  {activeMenuSourceId === src.id && (
+                                    <div 
+                                        ref={menuRef} 
+                                        className="absolute right-0 top-6 w-48 bg-popover border border-border rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in zoom-in-95 duration-100"
+                                        onClick={(e) => e.stopPropagation()}
+                                        data-cy="src-card-options"
+                                    >
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer">
+                                            <span className="text-xs font-medium">Rename source</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer">
+                                            <span className="text-xs font-medium">Sync schema</span>
+                                        </div>
+                                        <div className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 text-destructive rounded-md cursor-pointer">
+                                            <span className="text-xs font-medium">Delete source</span>
+                                        </div>
+                                    </div>
+                                )}
+                              </div>
                           </div>
-                      </CardFooter>
-                  </Card>
+                      </div>
+                      
+                      {/* Footer / Stats */}
+                      <div className="flex items-center justify-between mt-auto pt-3">
+                          <div className="text-[11px] text-muted-foreground font-medium">
+                              {/* Using generic time format */}
+                              <span>Edited {src.lastEdited}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                             <Database size={11} />
+                             <span>Data Source</span>
+                          </div>
+                      </div>
+                  </div>
               ))}
           </div>
         </div>

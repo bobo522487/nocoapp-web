@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WidthProvider, Responsive } from "react-grid-layout";
+import { WidthProvider, Responsive, Layout } from "react-grid-layout";
 import { GripVertical, BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, Type, MousePointerClick, Copy, Trash2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
@@ -203,7 +203,7 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const handleLayoutChangeInternal = (newLayout: ReactGridLayout.Layout[]) => {
+  const handleLayoutChangeInternal = (newLayout: Layout[]) => {
       // Merge geometry from RGL with data from our state
       const mergedLayout = newLayout.map(l => {
           const original = layout.find(o => o.i === l.i);

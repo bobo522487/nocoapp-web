@@ -61,3 +61,16 @@ export interface GridItemData {
   title?: string;
   content?: any;
 }
+
+export interface SchemaField {
+  id: string;
+  name: string;
+  type: 'text' | 'number' | 'email' | 'select' | 'status' | 'date' | 'boolean';
+  defaultValue: string;
+  isPrimary: boolean;
+  isNullable: boolean;
+  description?: string;
+  flex?: boolean;
+  width?: number;
+  icon?: any;
+}

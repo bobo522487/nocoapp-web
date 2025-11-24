@@ -1,4 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
+import { Input } from "./ui/input";
 
 export interface ColumnDef<T> {
   id: string;
@@ -94,122 +103,121 @@ const DataTable = <T extends { [key: string]: any }>({
   const isAllSelected = data.length > 0 && selectedIds.length === data.length;
   const isIndeterminate = selectedIds.length > 0 && selectedIds.length < data.length;
 
-  // Custom checkbox class with SVG checkmark and dark mode support
-  const checkboxClass = "appearance-none h-4 w-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1e1e1e] checked:bg-blue-600 checked:border-blue-600 checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2.5-2.5a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')] bg-center bg-no-repeat focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer transition-colors";
-
   return (
-    <div className="w-full min-w-[800px] text-sm">
-      {/* Header */}
-      <div className="flex items-center h-[34px] border-b border-gray-200 dark:border-ide-border bg-gray-50/80 dark:bg-ide-bg sticky top-0 z-10 text-xs font-semibold text-gray-500 dark:text-gray-400">
-        {enableSelection && (
-            <div className="w-10 px-3 h-full flex items-center justify-center border-r border-transparent shrink-0">
-               <input
-                 type="checkbox"
-                 className={checkboxClass}
-                 checked={isAllSelected}
-                 ref={input => {
-                     if (input) input.indeterminate = isIndeterminate;
-                 }}
-                 onChange={handleSelectAll}
-               />
-            </div>
-        )}
-        {columns.map((col) => (
-          <div
-            key={col.id}
-            className={`px-2 truncate h-full flex items-center ${col.className || ''}`}
-            style={{
-              width: col.flex ? undefined : col.width,
-              minWidth: col.minWidth,
-              flex: col.flex ? 1 : undefined,
-            }}
-          >
-            {col.header}
-          </div>
-        ))}
-      </div>
-
-      {/* Rows */}
-      {data.map((row) => {
-        const rowId = row[keyField];
-        const isSelected = selectedIds.includes(rowId);
-        
-        return (
-          <div
-            key={String(rowId)}
-            onClick={() => onRowClick && onRowClick(row)}
-            className={`relative flex items-center h-[34px] border-b border-gray-100 dark:border-[#2b2b2b] hover:bg-gray-50 dark:hover:bg-[#2b2b2b] group transition-colors ${rowClassName} ${isSelected ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
-          >
+    <div className="w-full min-w-[800px] border-b border-border">
+      <Table>
+        <TableHeader className="sticky top-0 bg-background z-10 backdrop-blur-sm">
+          <TableRow className="hover:bg-transparent border-border">
             {enableSelection && (
-                <div className="w-10 px-3 h-full flex items-center justify-center border-r border-transparent shrink-0">
-                   <input
-                     type="checkbox"
-                     className={checkboxClass}
-                     checked={isSelected}
-                     onChange={(e) => {
-                         e.stopPropagation();
-                         handleSelectRow(rowId);
-                     }}
-                     onClick={(e) => e.stopPropagation()}
-                   />
-                </div>
+              <TableHead className="w-10 px-3 text-center">
+                 <input
+                   type="checkbox"
+                   className="appearance-none h-4 w-4 rounded border border-input bg-background checked:bg-primary checked:border-primary checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2.5-2.5a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')] bg-center bg-no-repeat focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                   checked={isAllSelected}
+                   ref={input => {
+                       if (input) input.indeterminate = isIndeterminate;
+                   }}
+                   onChange={handleSelectAll}
+                 />
+              </TableHead>
             )}
-            {columns.map((col) => {
-              const isEditing = editingCell?.rowId === rowId && editingCell?.colId === col.id;
-              const value = col.accessorKey ? row[col.accessorKey] : undefined;
+            {columns.map((col) => (
+              <TableHead
+                key={col.id}
+                className={`h-9 px-3 font-semibold text-xs text-muted-foreground ${col.className || ''}`}
+                style={{
+                  width: col.flex ? undefined : col.width,
+                  minWidth: col.minWidth,
+                }}
+              >
+                {col.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((row) => {
+            const rowId = row[keyField];
+            const isSelected = selectedIds.includes(rowId);
+            
+            return (
+              <TableRow
+                key={String(rowId)}
+                onClick={() => onRowClick && onRowClick(row)}
+                className={`h-9 border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${rowClassName}`}
+                data-state={isSelected ? "selected" : undefined}
+              >
+                {enableSelection && (
+                    <TableCell className="w-10 px-3 py-1 text-center">
+                       <input
+                         type="checkbox"
+                         className="appearance-none h-4 w-4 rounded border border-input bg-background checked:bg-primary checked:border-primary checked:bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22white%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M12.207%204.793a1%201%200%20010%201.414l-5%205a1%201%200%2001-1.414%200l-2.5-2.5a1%201%200%20011.414-1.414L6.5%209.086l4.293-4.293a1%201%200%20011.414%200z%22%2F%3E%3C%2Fsvg%3E')] bg-center bg-no-repeat focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+                         checked={isSelected}
+                         onChange={(e) => {
+                             e.stopPropagation();
+                             handleSelectRow(rowId);
+                         }}
+                         onClick={(e) => e.stopPropagation()}
+                       />
+                    </TableCell>
+                )}
+                {columns.map((col) => {
+                  const isEditing = editingCell?.rowId === rowId && editingCell?.colId === col.id;
+                  const value = col.accessorKey ? row[col.accessorKey] : undefined;
 
-              return (
-                <div
-                  key={col.id}
-                  onClick={(e) => {
-                     e.stopPropagation(); // Prevent row click
-                     handleStartEdit(row, col);
-                  }}
-                  className={`relative h-full flex items-center ${col.editable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-[#333]' : ''} ${col.className || ''}`}
-                  style={{
-                    width: col.flex ? undefined : col.width,
-                    minWidth: col.minWidth,
-                    flex: col.flex ? 1 : undefined,
-                  }}
-                >
-                  {isEditing ? (
-                    col.type === 'select' ? (
-                        <select
-                            ref={inputRef as React.RefObject<HTMLSelectElement>}
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={handleSaveEdit}
-                            onKeyDown={handleKeyDown}
-                            className="absolute inset-0 w-full h-full z-20 bg-white dark:bg-[#1e1e1e] border-2 border-blue-600 outline-none text-xs px-2"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {col.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                        </select>
-                    ) : (
-                        <input
-                            ref={inputRef as React.RefObject<HTMLInputElement>}
-                            type={col.type || 'text'}
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={handleSaveEdit}
-                            onKeyDown={handleKeyDown}
-                            className="absolute inset-0 w-full h-full z-20 bg-white dark:bg-[#1e1e1e] border-2 border-blue-600 outline-none text-xs px-2"
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    )
-                  ) : (
-                    <div className="w-full h-full px-2 flex items-center truncate">
-                        {col.renderCell ? col.renderCell(row, value) : (
-                            <span className="truncate">{value}</span>
-                        )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+                  return (
+                    <TableCell
+                      key={col.id}
+                      onClick={(e) => {
+                         e.stopPropagation(); 
+                         handleStartEdit(row, col);
+                      }}
+                      className={`p-0 relative h-9 align-middle ${col.editable ? 'cursor-pointer' : ''} ${col.className || ''}`}
+                      style={{
+                        width: col.flex ? undefined : col.width,
+                        minWidth: col.minWidth,
+                      }}
+                    >
+                      {isEditing ? (
+                        col.type === 'select' ? (
+                            <select
+                                ref={inputRef as React.RefObject<HTMLSelectElement>}
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={handleSaveEdit}
+                                onKeyDown={handleKeyDown}
+                                className="absolute inset-0 w-full h-full z-20 bg-background text-foreground border-2 border-primary outline-none text-xs px-2"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {col.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                        ) : (
+                            <input
+                                ref={inputRef as React.RefObject<HTMLInputElement>}
+                                type={col.type || 'text'}
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onBlur={handleSaveEdit}
+                                onKeyDown={handleKeyDown}
+                                className="absolute inset-0 w-full h-full z-20 bg-background text-foreground border-2 border-primary outline-none text-xs px-2"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        )
+                      ) : (
+                        <div className="w-full h-full px-3 flex items-center truncate">
+                            {col.renderCell ? col.renderCell(row, value) : (
+                                <span className="truncate text-foreground">{value}</span>
+                            )}
+                        </div>
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 };

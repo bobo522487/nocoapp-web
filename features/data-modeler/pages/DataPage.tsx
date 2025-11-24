@@ -514,7 +514,7 @@ const DataPage: React.FC<DataPageProps> = () => {
 
       {/* Secondary Toolbar - Contextual */}
       {selectedIds.length > 0 ? (
-           <div className="h-10 border-b border-border bg-red-50 dark:bg-red-900/20 flex items-center px-4 justify-between shrink-0 transition-colors animate-in slide-in-from-top-2 duration-200">
+           <div className="h-10 border-b border-border bg-red-50 dark:bg-red-900/20 flex items-center px-4 gap-4 shrink-0 transition-colors animate-in slide-in-from-top-2 duration-200">
                <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 font-medium">
                    <div className="w-5 h-5 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center text-xs font-bold">
                        {selectedIds.length}

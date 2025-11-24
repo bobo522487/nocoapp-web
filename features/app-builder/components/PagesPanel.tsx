@@ -34,6 +34,7 @@ const PagesPanel = () => {
       activePageId, 
       addPage, 
       deletePage, 
+      updatePage,
       pageLayouts, 
       selectedComponentId, 
       setSelectedComponentId 
@@ -48,6 +49,11 @@ const PagesPanel = () => {
   const [pagesHeight, setPagesHeight] = useState(250);
   const [isResizing, setIsResizing] = useState(false);
   
+  // Rename State
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const renameInputRef = useRef<HTMLInputElement>(null);
+
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const splitterRef = useRef<HTMLDivElement>(null);
@@ -70,6 +76,14 @@ const PagesPanel = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showComponents, activeMenuPage]);
+
+  // Focus input when renaming starts
+  useEffect(() => {
+      if (renamingId && renameInputRef.current) {
+          renameInputRef.current.focus();
+          renameInputRef.current.select();
+      }
+  }, [renamingId]);
 
   // Resizing Logic for Vertical Split
   useEffect(() => {
@@ -118,7 +132,37 @@ const PagesPanel = () => {
 
   const handlePageClick = (pageId: string) => {
       // Use navigation instead of setting store directly
+      if (renamingId === pageId) return; // Don't navigate while renaming
       navigate(`/apps/${appId || 'default-app'}/pages/${pageId}`);
+  };
+
+  const startRenaming = (page: Page, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setRenamingId(page.id);
+      setRenameValue(page.name);
+      setActiveMenuPage(null);
+  };
+
+  const saveRename = () => {
+      if (renamingId && renameValue.trim()) {
+          updatePage(renamingId, { name: renameValue.trim() });
+      }
+      setRenamingId(null);
+      setRenameValue("");
+  };
+
+  const cancelRename = () => {
+      setRenamingId(null);
+      setRenameValue("");
+  };
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter') {
+          saveRename();
+      } else if (e.key === 'Escape') {
+          cancelRename();
+      }
+      e.stopPropagation();
   };
 
   const getPageIcon = (iconName: string) => {
@@ -198,6 +242,8 @@ const PagesPanel = () => {
           <div className="flex-1 overflow-y-auto p-1">
              {pages.map(page => {
                 const isActive = page.id === activePageId;
+                const isRenaming = renamingId === page.id;
+
                 return (
                     <div 
                         key={page.id} 
@@ -209,19 +255,36 @@ const PagesPanel = () => {
                         <div className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors flex items-center`}>
                            {getPageIcon(page.icon)}
                         </div>
-                        <span className="flex-1 truncate text-xs">{page.name}</span>
-                        {page.isHome && <Home size={10} className="text-muted-foreground mr-1" />}
+                        
+                        {isRenaming ? (
+                            <input
+                                ref={renameInputRef}
+                                type="text"
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onBlur={saveRename}
+                                onKeyDown={handleRenameKeyDown}
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 min-w-0 h-6 bg-background border border-primary/50 rounded-sm px-1 text-xs outline-none text-foreground"
+                            />
+                        ) : (
+                            <span className="flex-1 truncate text-xs">{page.name}</span>
+                        )}
+
+                        {!isRenaming && page.isHome && <Home size={10} className="text-muted-foreground mr-1" />}
                         
                         {/* Action Menu */}
-                        <div 
-                            className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenuPage === page.id ? 'opacity-100' : ''}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveMenuPage(activeMenuPage === page.id ? null : page.id);
-                            }}
-                        >
-                            <MoreVertical size={12} className="text-muted-foreground hover:text-foreground" />
-                        </div>
+                        {!isRenaming && (
+                            <div 
+                                className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenuPage === page.id ? 'opacity-100' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveMenuPage(activeMenuPage === page.id ? null : page.id);
+                                }}
+                            >
+                                <MoreVertical size={12} className="text-muted-foreground hover:text-foreground" />
+                            </div>
+                        )}
 
                         {/* Context Menu */}
                         {activeMenuPage === page.id && (
@@ -229,7 +292,10 @@ const PagesPanel = () => {
                             ref={menuRef}
                             className="absolute right-2 top-6 w-32 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col py-1"
                         >
-                            <button className="flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-muted w-full text-left transition-colors">
+                            <button 
+                                onClick={(e) => startRenaming(page, e)}
+                                className="flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-muted w-full text-left transition-colors"
+                            >
                                 <Pencil size={12} /> Rename
                             </button>
                             <button 

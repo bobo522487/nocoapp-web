@@ -44,6 +44,12 @@ export interface Page {
   height: string;
 }
 
+export interface DbTable {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface GridItemData {
   i: string;
   x: number;

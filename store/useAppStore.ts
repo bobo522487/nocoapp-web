@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { ViewMode, Page, GridItemData } from '../types';
+import { ViewMode, Page, GridItemData, DbTable } from '../types';
 
 interface AppState {
   isDarkMode: boolean;
@@ -18,8 +18,13 @@ interface AppState {
   deletePage: (id: string) => void;
 
   // Data State
+  tables: DbTable[];
   activeTableId: string;
+  setTables: (tables: DbTable[]) => void;
   setActiveTableId: (id: string) => void;
+  addTable: (table: DbTable) => void;
+  updateTable: (id: string, updates: Partial<DbTable>) => void;
+  deleteTable: (id: string) => void;
 
   // App Builder / Layout State
   pageLayouts: Record<string, Record<string, GridItemData[]>>;
@@ -34,6 +39,13 @@ const INITIAL_PAGES: Page[] = [
   { id: 'page-1', name: 'Dashboard', icon: 'LayoutGrid', isHome: true, isHidden: false, isDisabled: false, height: '800' },
   { id: 'page-2', name: 'Orders', icon: 'ShoppingCart', isHome: false, isHidden: false, isDisabled: false, height: '1000' },
   { id: 'page-3', name: 'Settings', icon: 'Settings', isHome: false, isHidden: false, isDisabled: false, height: '600' },
+];
+
+const INITIAL_TABLES: DbTable[] = [
+    { id: 'users', name: 'users' },
+    { id: 'orders', name: 'orders' },
+    { id: 'products', name: 'products' },
+    { id: 'inventory_logs', name: 'inventory_logs' }
 ];
 
 const INITIAL_LAYOUT: GridItemData[] = [
@@ -85,8 +97,20 @@ export const useAppStore = create<AppState>((set) => ({
   }),
 
   // Data State
+  tables: INITIAL_TABLES,
   activeTableId: 'users',
+  setTables: (tables) => set({ tables }),
   setActiveTableId: (id) => set({ activeTableId: id }),
+  addTable: (table) => set((state) => ({ tables: [...state.tables, table] })),
+  updateTable: (id, updates) => set((state) => ({
+    tables: state.tables.map(t => t.id === id ? { ...t, ...updates } : t)
+  })),
+  deleteTable: (id) => set((state) => ({
+      tables: state.tables.filter(t => t.id !== id),
+      activeTableId: state.activeTableId === id && state.tables.length > 1
+        ? state.tables.find(t => t.id !== id)?.id || ''
+        : state.activeTableId
+  })),
 
   // Layout State Implementation
   pageLayouts: INITIAL_PAGE_LAYOUTS,

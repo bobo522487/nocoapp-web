@@ -99,7 +99,7 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanva
             <Button variant="outline" size="sm" className="gap-2 h-8">
                 <Play size={14} /> Preview
             </Button>
-            <Button variant="default" size="sm" className="gap-2 h-8 bg-blue-600 hover:bg-blue-700 text-white">
+            <Button variant="default" size="sm" className="gap-2 h-8">
                 <Rocket size={14} /> Publish
             </Button>
         </div>

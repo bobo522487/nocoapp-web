@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DataGrid from '../../../components/DataGrid';
 import { ColumnDef } from '../../../components/DataTable';
@@ -262,7 +263,7 @@ const DataPage: React.FC = () => {
   }));
 
   return (
-    <div className="flex flex-col h-full bg-background relative">
+    <div className="flex-1 flex flex-col w-full h-full bg-background relative min-w-0">
       {/* View Mode Toggle / Header Extension */}
       <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20">
           <div className="flex bg-muted/50 p-1 rounded-md">

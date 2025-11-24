@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ChevronRight, ChevronDown, File as FileIcon, Folder as FolderIcon, FolderOpen, X } from 'lucide-react';
 import { FileSystemNode, FileType, ViewMode } from '../../types';
@@ -72,9 +73,6 @@ interface SidebarProps {
   onSelectFile: (node: FileSystemNode) => void;
   selectedFileId: string | null;
   width: number;
-  // Data View Props
-  activeTable?: string;
-  onTableSelect?: (tableId: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -82,9 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggleFolder, 
   onSelectFile, 
   selectedFileId, 
-  width,
-  activeTable,
-  onTableSelect
+  width
 }) => {
   const { activeView } = useAppStore();
   
@@ -93,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       case ViewMode.APPS:
         return <PagesPanel />;
       case ViewMode.DATA:
-        return <TablePanel activeTable={activeTable} onTableSelect={onTableSelect} />;
+        return <TablePanel />;
       case ViewMode.HOME:
         return null;
       case ViewMode.SETTINGS:

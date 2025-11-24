@@ -17,6 +17,10 @@ interface AppState {
   addPage: (page: Page) => void;
   deletePage: (id: string) => void;
 
+  // Data State
+  activeTableId: string;
+  setActiveTableId: (id: string) => void;
+
   // App Builder / Layout State
   layouts: Record<string, GridItemData[]>;
   selectedComponentId: string | null;
@@ -62,6 +66,10 @@ export const useAppStore = create<AppState>((set) => ({
         ? state.pages.find(p => p.id !== id)?.id || '' // Fallback to another page
         : state.activePageId
   })),
+
+  // Data State
+  activeTableId: 'users',
+  setActiveTableId: (id) => set({ activeTableId: id }),
 
   // Layout State Implementation
   layouts: { lg: INITIAL_LAYOUT }, // Initialize with desktop layout

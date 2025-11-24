@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
@@ -19,6 +20,8 @@ interface DropdownProps {
   width?: number;
   footer?: React.ReactNode;
   className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -30,17 +33,30 @@ const Dropdown: React.FC<DropdownProps> = ({
   searchPlaceholder = "Search...",
   width = 240,
   footer,
-  className = ""
+  className = "",
+  open,
+  onOpenChange
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [searchTerm, setSearchTerm] = useState('');
   const triggerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const isControlled = open !== undefined;
+  const isOpen = isControlled ? open : internalIsOpen;
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (isControlled) {
+      onOpenChange?.(newOpen);
+    } else {
+      setInternalIsOpen(newOpen);
+    }
+  };
+
   const toggleDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation();
+    // Removed e.stopPropagation() to allow document click handler to close other open dropdowns
     
     if (!isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
@@ -50,7 +66,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       });
       setSearchTerm('');
     }
-    setIsOpen(!isOpen);
+    handleOpenChange(!isOpen);
   };
 
   useEffect(() => {
@@ -62,7 +78,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         triggerRef.current &&
         !triggerRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        handleOpenChange(false);
       }
     };
 
@@ -71,7 +87,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
         return;
       }
-      if (isOpen) setIsOpen(false);
+      if (isOpen) handleOpenChange(false);
     };
 
     if (isOpen) {
@@ -86,7 +102,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [isOpen]);
+  }, [isOpen, onOpenChange]);
 
   const filteredItems = items.filter(item => 
     item.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -137,7 +153,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                  onClick={(e) => {
                    e.stopPropagation();
                    onSelect(item);
-                   setIsOpen(false);
+                   handleOpenChange(false);
                  }}
                  className={`relative flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium outline-none cursor-pointer select-none transition-colors ${
                    selectedId === item.id 
@@ -170,7 +186,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     <>
       <div 
         ref={triggerRef}
-        onMouseDown={toggleDropdown} // Use onMouseDown to prevent focus loss/click timing issues
+        onMouseDown={toggleDropdown}
         className={`flex items-center gap-2 hover:bg-muted/50 px-2 py-1.5 rounded-md cursor-pointer transition-colors group select-none ${
             isOpen ? 'bg-muted/50' : ''
         } ${className}`}

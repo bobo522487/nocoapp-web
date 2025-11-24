@@ -1,14 +1,12 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Plus, Table, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { useAppStore } from '../../../store/useAppStore';
 
-interface TablePanelProps {
-  activeTable?: string;
-  onTableSelect?: (tableId: string) => void;
-}
-
-const TablePanel: React.FC<TablePanelProps> = ({ activeTable, onTableSelect }) => {
+const TablePanel: React.FC = () => {
+  const { activeTableId, setActiveTableId } = useAppStore();
   const [activeMenuTable, setActiveMenuTable] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -26,9 +24,7 @@ const TablePanel: React.FC<TablePanelProps> = ({ activeTable, onTableSelect }) =
   }, []);
 
   const handleTableClick = (table: string) => {
-    if (onTableSelect) {
-      onTableSelect(table);
-    }
+    setActiveTableId(table);
   };
 
   return (
@@ -64,7 +60,7 @@ const TablePanel: React.FC<TablePanelProps> = ({ activeTable, onTableSelect }) =
             </div>
 
             {['users', 'orders', 'products', 'inventory_logs'].map(table => {
-                const isActive = activeTable === table;
+                const isActive = activeTableId === table;
                 return (
                     <div 
                         key={table} 

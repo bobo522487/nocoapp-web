@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import ActivityBar from '../components/layout/ActivityBar';
 import Sidebar from '../components/layout/Sidebar';
@@ -29,9 +30,6 @@ const App: React.FC = () => {
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [tabs, setTabs] = useState<Tab[]>([]);
   
-  // Data View State
-  const [activeTable, setActiveTable] = useState<string>('users');
-
   // Drag and Drop State
   const [draggedItem, setDraggedItem] = useState<any>(null);
   const [droppedItem, setDroppedItem] = useState<any>(null);
@@ -185,8 +183,6 @@ const App: React.FC = () => {
                   onSelectFile={handleSelectFile}
                   selectedFileId={activeTab?.fileId || null}
                   width={sidebarWidth}
-                  activeTable={activeTable}
-                  onTableSelect={setActiveTable}
               />
               {/* Sidebar Resizer */}
               <div
@@ -210,7 +206,7 @@ const App: React.FC = () => {
                     onItemConsumed={() => setDroppedItem(null)}
                   />
               ) : activeView === ViewMode.DATA ? (
-                  <DataPage tableName={activeTable} />
+                  <DataPage />
               ) : (
                   <Editor 
                       tabs={tabs}

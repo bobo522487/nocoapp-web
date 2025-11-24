@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Dropdown from './Dropdown';
 import { LayoutGrid, Database, Table, Plus, Box, File } from 'lucide-react';
@@ -5,18 +6,19 @@ import { ViewMode } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
 
 const Breadcrumb: React.FC = () => {
-  const { activeView } = useAppStore();
+  const { activeView, pages, activePageId, setActivePageId, activeTableId, setActiveTableId } = useAppStore();
 
   // --- State ---
   const [selectedOrg, setSelectedOrg] = useState({ id: 'org-1', label: "bobo's Org" });
 
-  // Data View State
+  // Data View State (Source is still mocked locally as it's not in store yet)
   const [selectedSource, setSelectedSource] = useState({ id: 'src-1', label: "nocoapp-db" });
-  const [selectedTable, setSelectedTable] = useState({ id: 'table-1', label: "users" });
-
-  // Apps View State
+  
+  // Apps View State (App is still mocked locally)
   const [selectedApp, setSelectedApp] = useState({ id: 'app-1', label: "Order App" });
-  const [selectedPage, setSelectedPage] = useState({ id: 'page-1', label: "Dashboard" });
+
+  // Dropdown control state
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // --- Mock Data ---
   const orgs = [
@@ -29,11 +31,12 @@ const Breadcrumb: React.FC = () => {
     { id: 'src-1', label: "nocoapp-db", group: 'Databases', icon: Database },
     { id: 'src-2', label: "production-db", group: 'Databases', icon: Database },
   ];
+  
   const tables = [
-    { id: 'table-1', label: "users", group: 'Public', icon: Table },
-    { id: 'table-2', label: "orders", group: 'Public', icon: Table },
-    { id: 'table-3', label: "products", group: 'Public', icon: Table },
-    { id: 'table-4', label: "inventory_logs", group: 'Public', icon: Table },
+    { id: 'users', label: "users", group: 'Public', icon: Table },
+    { id: 'orders', label: "orders", group: 'Public', icon: Table },
+    { id: 'products', label: "products", group: 'Public', icon: Table },
+    { id: 'inventory_logs', label: "inventory_logs", group: 'Public', icon: Table },
   ];
 
   // App Context
@@ -42,12 +45,17 @@ const Breadcrumb: React.FC = () => {
     { id: 'app-2', label: "CRM Dashboard", group: 'Apps', icon: LayoutGrid },
     { id: 'app-3', label: "Employee Portal", group: 'Apps', icon: LayoutGrid },
   ];
-  const pages = [
-    { id: 'page-1', label: "Dashboard", group: 'Pages', icon: File },
-    { id: 'page-2', label: "Settings", group: 'Pages', icon: File },
-    { id: 'page-3', label: "Login", group: 'Pages', icon: File },
-    { id: 'page-4', label: "404 Error", group: 'Pages', icon: File },
-  ];
+  
+  // Derived state from Store
+  const activePage = pages.find(p => p.id === activePageId);
+  const pageItems = pages.map(p => ({
+      id: p.id,
+      label: p.name,
+      group: 'Pages',
+      icon: File
+  }));
+
+  const activeTableItem = tables.find(t => t.id === activeTableId);
 
   const Separator = () => (
     <span className="text-muted-foreground/40 mx-1 text-lg font-light">/</span>
@@ -63,6 +71,8 @@ const Breadcrumb: React.FC = () => {
             selectedId={selectedOrg.id}
             onSelect={(item) => setSelectedOrg({ id: item.id, label: item.label })}
             searchPlaceholder="Find organization..."
+            open={activeDropdown === 'org'}
+            onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'org' : null)}
             footer={
                 <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
                     <Plus size={14} className="text-muted-foreground" />
@@ -82,6 +92,8 @@ const Breadcrumb: React.FC = () => {
                     selectedId={selectedApp.id}
                     onSelect={(item) => setSelectedApp({ id: item.id, label: item.label })}
                     searchPlaceholder="Find app..."
+                    open={activeDropdown === 'app'}
+                    onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'app' : null)}
                     footer={
                          <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
                             <Plus size={14} className="text-muted-foreground" />
@@ -91,12 +103,14 @@ const Breadcrumb: React.FC = () => {
                 />
                 <Separator />
                 <Dropdown
-                    triggerLabel={selectedPage.label}
+                    triggerLabel={activePage?.name || 'Select Page'}
                     triggerIcon={File}
-                    items={pages}
-                    selectedId={selectedPage.id}
-                    onSelect={(item) => setSelectedPage({ id: item.id, label: item.label })}
+                    items={pageItems}
+                    selectedId={activePageId}
+                    onSelect={(item) => setActivePageId(item.id)}
                     searchPlaceholder="Find page..."
+                    open={activeDropdown === 'page'}
+                    onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'page' : null)}
                      footer={
                          <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
                             <Plus size={14} className="text-muted-foreground" />
@@ -118,6 +132,8 @@ const Breadcrumb: React.FC = () => {
                     selectedId={selectedSource.id}
                     onSelect={(item) => setSelectedSource({ id: item.id, label: item.label })}
                     searchPlaceholder="Find data source..."
+                    open={activeDropdown === 'source'}
+                    onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'source' : null)}
                     footer={
                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
                             <Plus size={14} className="text-muted-foreground" />
@@ -127,12 +143,14 @@ const Breadcrumb: React.FC = () => {
                 />
                 <Separator />
                 <Dropdown
-                    triggerLabel={selectedTable.label}
+                    triggerLabel={activeTableItem?.label || activeTableId}
                     triggerIcon={Table}
                     items={tables}
-                    selectedId={selectedTable.id}
-                    onSelect={(item) => setSelectedTable({ id: item.id, label: item.label })}
+                    selectedId={activeTableId}
+                    onSelect={(item) => setActiveTableId(item.id)}
                     searchPlaceholder="Find table..."
+                    open={activeDropdown === 'table'}
+                    onOpenChange={(isOpen) => setActiveDropdown(isOpen ? 'table' : null)}
                     footer={
                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
                             <Plus size={14} className="text-muted-foreground" />

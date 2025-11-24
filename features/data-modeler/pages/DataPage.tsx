@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Plus, ArrowUpDown, Table as TableIcon, Database, CheckCircle2, Calendar, Type, Mail, FileKey, Trash2, CheckSquare, ChevronLeft, ChevronRight, Columns, EyeOff, ArrowUpAZ, ArrowDownAZ, ListFilter, X, ChevronDown, DollarSign, Package, ShoppingCart } from 'lucide-react';
@@ -5,6 +6,7 @@ import DataTable, { ColumnDef } from '../components/DataTable';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Badge } from "../../../components/ui/badge";
+import { useAppStore } from '../../../store/useAppStore';
 
 // Types for our Data Grid
 interface SchemaField {
@@ -33,6 +35,7 @@ interface SortRule {
 }
 
 interface DataPageProps {
+  // Prop is now optional/legacy as we use store
   tableName?: string;
 }
 
@@ -168,7 +171,8 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
     }
 }
 
-const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
+const DataPage: React.FC<DataPageProps> = () => {
+  const { activeTableId } = useAppStore();
   const [viewMode, setViewMode] = useState<'MODEL' | 'DATA'>('DATA');
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   
@@ -194,20 +198,21 @@ const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
   const sortBtnRef = useRef<HTMLButtonElement>(null);
   const pageSizeBtnRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with users data first, then effect will update
+  // Initialize with activeTableId from store
   const [schema, setSchema] = useState<SchemaField[]>(MOCK_DB['users'].schema);
   const [records, setRecords] = useState<any[]>(MOCK_DB['users'].records);
 
   // --- Effect: Load Data on Table Change ---
   useEffect(() => {
-      const data = MOCK_DB[tableName] || MOCK_DB['users'];
+      // Use activeTableId from store, default to 'users' if not found
+      const data = MOCK_DB[activeTableId] || MOCK_DB['users'];
       setSchema(data.schema);
       setRecords(data.records);
       setSelectedIds([]);
       setFilters([]);
       setSort(null);
       setCurrentPage(1);
-  }, [tableName]);
+  }, [activeTableId]);
 
   useEffect(() => {
     // Clear selection when view changes
@@ -532,7 +537,7 @@ const DataPage: React.FC<DataPageProps> = ({ tableName = 'users' }) => {
             {/* Table Name Indicator */}
             <div className="flex items-center gap-2 mr-4 text-xs font-semibold text-foreground bg-muted px-2 py-1 rounded">
                 <TableIcon size={12} />
-                <span className="capitalize">{tableName}</span>
+                <span className="capitalize">{activeTableId}</span>
             </div>
 
             <Button 

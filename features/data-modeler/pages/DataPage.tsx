@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DataGrid from '../../../components/DataGrid';
+import { ColumnDef } from '../../../components/DataTable';
 import { useAppStore } from '../../../store/useAppStore';
 import { SchemaField } from '../../../types';
-import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown } from 'lucide-react';
+import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon } from 'lucide-react';
+import { Button } from "../../../components/ui/button";
+import { Badge } from "../../../components/ui/badge";
 
 // --- Mock Data Store ---
 const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
@@ -72,6 +75,7 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
 
 const DataPage: React.FC = () => {
   const { activeTableId } = useAppStore();
+  const [viewMode, setViewMode] = useState<'MODEL' | 'DATA'>('DATA');
   
   // Use state to manage the data locally since MOCK_DB is just the initial state
   const [schema, setSchema] = useState<SchemaField[]>([]);
@@ -82,6 +86,8 @@ const DataPage: React.FC = () => {
     const data = MOCK_DB[activeTableId] || MOCK_DB['users'];
     setSchema(data.schema);
     setRecords(data.records);
+    // Reset view mode on table switch
+    setViewMode('DATA');
   }, [activeTableId]);
 
   // --- Handlers for DataGrid Actions ---
@@ -107,8 +113,9 @@ const DataPage: React.FC = () => {
       setSchema([...schema, newField]);
   };
 
-  const handleSchemaDelete = (ids: string[]) => {
-      setSchema(prev => prev.filter(col => !ids.includes(col.id)));
+  const handleSchemaDelete = (ids: (string | number)[]) => {
+      const idsToDelete = new Set(ids.map(String));
+      setSchema(prev => prev.filter(col => !idsToDelete.has(String(col.id))));
   };
 
   const handleDataChange = (rowId: string | number, colId: string, value: any) => {
@@ -129,21 +136,162 @@ const DataPage: React.FC = () => {
   };
 
   const handleDataDelete = (ids: (string | number)[]) => {
-      setRecords(prev => prev.filter(rec => !ids.includes(rec.id)));
+      // Ensure we compare strings to avoid number vs string issues
+      const idsToDelete = new Set(ids.map(String));
+      setRecords(prev => prev.filter(rec => !idsToDelete.has(String(rec.id))));
   };
 
+  // --- Column Definitions ---
+
+  // 1. Model View Columns (Editing Schema)
+  const modelColumns: ColumnDef<SchemaField>[] = [
+      {
+          id: 'name',
+          header: 'Column Name',
+          accessorKey: 'name',
+          width: '25%',
+          minWidth: 200,
+          editable: true,
+          renderCell: (row) => (
+              <div className="flex items-center gap-2 font-medium text-foreground">
+                  {row.icon && <row.icon size={14} className="text-muted-foreground" />}
+                  {row.name}
+                  {row.isPrimary && <FileKey size={12} className="text-yellow-500 ml-1" />}
+              </div>
+          )
+      },
+      {
+          id: 'type',
+          header: 'Data Type',
+          accessorKey: 'type',
+          width: '16%',
+          minWidth: 150,
+          editable: true,
+          type: 'select',
+          options: ['text', 'number', 'email', 'select', 'status', 'date', 'boolean'],
+          renderCell: (row) => (
+             <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground bg-muted/40">
+                 {row.type}
+             </Badge>
+          )
+      },
+      {
+          id: 'defaultValue',
+          header: 'Default Value',
+          accessorKey: 'defaultValue',
+          width: '16%',
+          minWidth: 120,
+          editable: true,
+          renderCell: (row) => <span className="text-muted-foreground font-mono">{row.defaultValue}</span>
+      },
+      {
+          id: 'isPrimary',
+          header: <div className="text-center w-full">Primary</div>,
+          accessorKey: 'isPrimary',
+          width: 80,
+          renderCell: (row) => (
+              <div className="flex justify-center w-full cursor-pointer" onClick={(e) => { e.stopPropagation(); handleSchemaChange(row.id, 'isPrimary', !row.isPrimary); }}>
+                  {row.isPrimary ? <CheckCircle2 size={16} className="text-blue-500" /> : <div className="w-4 h-4 rounded-full border border-input"></div>}
+              </div>
+          )
+      },
+      {
+          id: 'isNullable',
+          header: <div className="text-center w-full">Nullable</div>,
+          accessorKey: 'isNullable',
+          width: 80,
+          renderCell: (row) => (
+              <div className="flex justify-center w-full">
+                  <div 
+                    className={`w-8 h-4 rounded-full p-0.5 flex items-center cursor-pointer transition-colors ${row.isNullable ? 'bg-primary' : 'bg-muted'}`}
+                    onClick={(e) => { e.stopPropagation(); handleSchemaChange(row.id, 'isNullable', !row.isNullable); }}
+                  >
+                    <div className={`w-3 h-3 bg-white rounded-full shadow-sm transform transition-transform ${row.isNullable ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+              </div>
+          )
+      },
+      {
+          id: 'description',
+          header: 'Description',
+          accessorKey: 'description',
+          flex: true,
+          editable: true,
+          renderCell: (row) => <span className="text-muted-foreground italic">{row.description || (row.isPrimary ? 'Unique identifier' : 'No description')}</span>
+      }
+  ];
+
+  // 2. Data View Columns (Generated from Schema)
+  const dataColumns: ColumnDef<any>[] = schema.map(field => ({
+      id: field.id,
+      header: (
+          <div className="flex items-center gap-2">
+             {field.icon && <field.icon size={13} className="text-muted-foreground" />}
+             {field.name}
+          </div>
+      ),
+      accessorKey: field.id,
+      width: field.flex ? undefined : field.width,
+      flex: field.flex,
+      minWidth: 100,
+      editable: field.id !== 'id' && field.id !== 'created', // ID and Created read-only (generic rule assumption)
+      renderCell: (row, value) => {
+          if (field.type === 'status') {
+               const variant = value === 'Active' || value === 'Completed' ? 'default' :
+                               value === 'Inactive' || value === 'Damage' ? 'destructive' : 'secondary';
+               // If it is secondary (gray), make sure text is readable in dark mode
+               const className = variant === 'secondary' ? "text-foreground bg-muted" : "";
+               return (
+                   <Badge variant={variant} className={`text-[10px] h-5 px-1.5 font-normal ${className}`}>
+                        {value}
+                    </Badge>
+               );
+          }
+          if (field.type === 'select' && field.id === 'role') {
+              return (
+                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-muted/30 text-foreground">
+                    {value}
+                  </Badge>
+              );
+          }
+          return <span className="truncate text-foreground">{value}</span>;
+      }
+  }));
+
   return (
-    <DataGrid 
-        tableName={activeTableId}
-        schema={schema}
-        data={records}
-        onSchemaChange={handleSchemaChange}
-        onSchemaAdd={handleSchemaAdd}
-        onSchemaDelete={handleSchemaDelete}
-        onDataChange={handleDataChange}
-        onDataAdd={handleDataAdd}
-        onDataDelete={handleDataDelete}
-    />
+    <div className="flex flex-col h-full bg-background relative">
+      {/* View Mode Toggle / Header Extension */}
+      <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-20">
+          <div className="flex bg-muted/50 p-1 rounded-md">
+              <Button 
+                variant={viewMode === 'MODEL' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('MODEL')}
+                className="h-7 text-xs gap-2"
+              >
+                  <Database size={14} /> Model
+              </Button>
+              <Button 
+                variant={viewMode === 'DATA' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('DATA')}
+                className="h-7 text-xs gap-2"
+              >
+                  <TableIcon size={14} /> Data
+              </Button>
+          </div>
+      </div>
+    
+      <DataGrid 
+          title={activeTableId}
+          columns={viewMode === 'MODEL' ? modelColumns : dataColumns}
+          data={viewMode === 'MODEL' ? schema : records}
+          onAdd={viewMode === 'MODEL' ? handleSchemaAdd : handleDataAdd}
+          onEdit={viewMode === 'MODEL' ? handleSchemaChange : handleDataChange}
+          onDelete={viewMode === 'MODEL' ? handleSchemaDelete : handleDataDelete}
+          keyField="id"
+      />
+    </div>
   );
 };
 

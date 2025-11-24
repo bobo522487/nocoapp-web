@@ -9,6 +9,7 @@ import HomeDashboard from './components/HomeDashboard';
 import { INITIAL_FILES } from './constants';
 import { FileSystemNode, FileType, ViewMode, Tab, SchemaField } from './types';
 import { useResizable } from './hooks/useResizable';
+import { ColumnDef } from './components/DataTable';
 
 const MOCK_SCHEMA: SchemaField[] = [
   { id: 'id', name: 'ID', type: 'number', defaultValue: 'auto-inc', isPrimary: true, isNullable: false, width: 60 },
@@ -23,6 +24,16 @@ const MOCK_DATA: any[] = [
   { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', created: '2023-10-01' },
   { id: 2, name: 'Jane Smith', email: 'jane@company.com', role: 'Editor', status: 'Active', created: '2023-10-02' },
 ];
+
+// Simple column generator for App.tsx example
+const generateColumns = (schema: SchemaField[]): ColumnDef<any>[] => schema.map(field => ({
+    id: field.id,
+    header: field.name,
+    accessorKey: field.id,
+    width: field.flex ? undefined : field.width,
+    flex: field.flex,
+    minWidth: 100,
+}));
 
 const App: React.FC = () => {
   // State
@@ -181,8 +192,8 @@ const App: React.FC = () => {
                 <AppBuilder />
             ) : activeView === ViewMode.DATA ? (
                 <DataGrid 
-                  tableName={activeTable} 
-                  schema={MOCK_SCHEMA}
+                  title={activeTable} 
+                  columns={generateColumns(MOCK_SCHEMA)}
                   data={MOCK_DATA}
                 />
             ) : (

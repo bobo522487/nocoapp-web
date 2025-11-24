@@ -1,28 +1,35 @@
 import React from 'react';
 import { Home, LayoutGrid, Database, Settings } from 'lucide-react';
-import { ViewMode } from '../../types';
 import { Button } from "../ui/button";
-import { useAppStore } from '../../store/useAppStore';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const ActivityBar: React.FC = () => {
-  const { activeView, setActiveView } = useAppStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const path = location.pathname;
+
+  const isActive = (route: string) => {
+      if (route === '/' && path === '/') return true;
+      if (route !== '/' && path.startsWith(route)) return true;
+      return false;
+  };
 
   const icons = [
-    { id: ViewMode.HOME, icon: Home, label: '首页' },
-    { id: ViewMode.APPS, icon: LayoutGrid, label: '应用' },
-    { id: ViewMode.DATA, icon: Database, label: '数据' },
+    { route: '/', icon: Home, label: '首页' },
+    { route: '/apps', icon: LayoutGrid, label: '应用' },
+    { route: '/data', icon: Database, label: '数据' },
   ];
 
   return (
     <div className="w-14 flex flex-col items-center py-4 bg-muted/40 border-r border-border text-muted-foreground z-20 select-none transition-colors">
       {icons.map((item) => (
         <Button
-          key={item.id}
+          key={item.route}
           title={item.label}
-          onClick={() => setActiveView(item.id)}
-          variant={activeView === item.id ? "secondary" : "ghost"}
+          onClick={() => navigate(item.route)}
+          variant={isActive(item.route) ? "secondary" : "ghost"}
           size="icon"
-          className={`mb-4 w-10 h-10 ${activeView === item.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`mb-4 w-10 h-10 ${isActive(item.route) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <item.icon size={20} strokeWidth={1.5} />
         </Button>
@@ -31,9 +38,10 @@ const ActivityBar: React.FC = () => {
       <div className="flex-1" />
       
       <Button 
-        variant="ghost" 
+        variant={isActive('/files') ? "secondary" : "ghost"} 
         size="icon"
-        className="w-10 h-10 mb-2 text-muted-foreground hover:text-foreground"
+        onClick={() => navigate('/files')}
+        className={`w-10 h-10 mb-2 ${isActive('/files') ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
       >
         <Settings size={20} strokeWidth={1.5} />
       </Button>

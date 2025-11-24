@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { LayoutGrid, Database, Plus, MoreVertical, Search, Box } from 'lucide-react';
-import { ViewMode } from '../../../types';
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Input } from "../../../components/ui/input";
-import { useAppStore } from '../../../store/useAppStore';
+import { useNavigate } from 'react-router-dom';
 
 const DashboardPage: React.FC = () => {
-  const { setActiveView } = useAppStore();
+  const navigate = useNavigate();
   const [activeMenuAppId, setActiveMenuAppId] = useState<string | null>(null);
   const [activeMenuSourceId, setActiveMenuSourceId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -26,57 +25,53 @@ const DashboardPage: React.FC = () => {
     };
   }, []);
 
+  const handleAppClick = (appId: string) => {
+      // Navigate to the first page of the app (default behavior)
+      // Since pages are mocked, we navigate to the generic app route which redirects
+      navigate(`/apps/${appId}`);
+  };
+
+  const handleSourceClick = (srcId: string) => {
+      // Navigate to data view
+      navigate(`/data`);
+  };
+
   // Mock Data
   const apps = [
     {
       id: 'app-1',
       name: 'Order Management System',
-      slug: 'order-mgmt-sys',
       description: 'Internal tool for managing customer orders.',
       lastEdited: '15d ago',
       color: 'bg-blue-500',
-      pages: ['Dashboard', 'Orders'],
-      isPublic: false
     },
     {
       id: 'app-2',
       name: 'CRM Dashboard',
-      slug: 'crm-dashboard',
       description: 'Customer relationship management.',
       lastEdited: '12d ago',
       color: 'bg-purple-500',
-      pages: ['Leads', 'Opportunities'],
-      isPublic: true
     },
     {
       id: 'app-3',
       name: 'Employee Portal',
-      slug: 'employee-portal',
       description: 'HR portal for leave requests.',
       lastEdited: '3d ago',
       color: 'bg-green-500',
-      pages: ['Home', 'Profile'],
-      isPublic: false
     },
     {
       id: 'app-4',
       name: 'E-commerce Frontend',
-      slug: 'ecommerce-frontend',
       description: 'Store with cart and checkout.',
       lastEdited: '5h ago',
       color: 'bg-orange-500',
-      pages: ['Home', 'Product'],
-      isPublic: true
     },
     {
       id: 'app-5',
       name: 'Inventory Tracker',
-      slug: 'inventory-tracker',
       description: 'Warehouse stock monitoring.',
       lastEdited: '1h ago',
       color: 'bg-red-500',
-      pages: ['Stock', 'Alerts'],
-      isPublic: false
     }
   ];
 
@@ -87,7 +82,6 @@ const DashboardPage: React.FC = () => {
       type: 'PostgreSQL',
       lastEdited: '2d ago',
       color: 'bg-cyan-500',
-      tables: ['users', 'orders', 'products', 'inventory_logs']
     },
     {
       id: 'src-2',
@@ -95,7 +89,6 @@ const DashboardPage: React.FC = () => {
       type: 'MySQL',
       lastEdited: '5d ago',
       color: 'bg-indigo-500',
-      tables: ['audit_trail', 'page_views', 'events']
     }
   ];
 
@@ -130,7 +123,7 @@ const DashboardPage: React.FC = () => {
                   <div 
                     key={app.id} 
                     className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
-                    onClick={() => setActiveView(ViewMode.APPS)}
+                    onClick={() => handleAppClick(app.id)}
                   >
                     {/* Header */}
                     <div>
@@ -164,22 +157,13 @@ const DashboardPage: React.FC = () => {
                                         onClick={(e) => e.stopPropagation()}
                                         data-cy="card-options"
                                     >
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="rename-app-card-option">
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button">
                                             <span className="text-xs font-medium">Rename app</span>
                                         </div>
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="change-icon-card-option">
-                                            <span className="text-xs font-medium">Change Icon</span>
-                                        </div>
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="add-to-folder-card-option">
-                                            <span className="text-xs font-medium">Add to folder</span>
-                                        </div>
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="clone-app-card-option">
-                                            <span className="text-xs font-medium">Clone app</span>
-                                        </div>
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button" data-cy="export-app-card-option">
+                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer" role="button">
                                             <span className="text-xs font-medium">Export app</span>
                                         </div>
-                                        <div className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 text-destructive rounded-md cursor-pointer" role="button" data-cy="delete-app-card-option">
+                                        <div className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 text-destructive rounded-md cursor-pointer" role="button">
                                             <span className="text-xs font-medium">Delete app</span>
                                         </div>
                                     </div>
@@ -205,7 +189,7 @@ const DashboardPage: React.FC = () => {
               {/* New Application Placeholder Card */}
               <div 
                 className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
-                onClick={() => setActiveView(ViewMode.APPS)}
+                onClick={() => navigate('/apps/new')}
               >
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
                       <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />
@@ -229,7 +213,7 @@ const DashboardPage: React.FC = () => {
                   <div 
                     key={src.id} 
                     className="group relative flex flex-col justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-blue-500 hover:shadow-md cursor-pointer h-[150px]"
-                    onClick={() => setActiveView(ViewMode.DATA)}
+                    onClick={() => handleSourceClick(src.id)}
                   >
                       {/* Header */}
                       <div>
@@ -259,13 +243,9 @@ const DashboardPage: React.FC = () => {
                                         ref={menuRef} 
                                         className="absolute right-0 top-6 w-48 bg-popover border border-border rounded-lg shadow-xl z-50 p-1 flex flex-col animate-in fade-in zoom-in-95 duration-100"
                                         onClick={(e) => e.stopPropagation()}
-                                        data-cy="src-card-options"
                                     >
                                         <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer">
                                             <span className="text-xs font-medium">Rename source</span>
-                                        </div>
-                                        <div className="px-3 py-2 hover:bg-muted rounded-md cursor-pointer">
-                                            <span className="text-xs font-medium">Sync schema</span>
                                         </div>
                                         <div className="px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/10 text-destructive rounded-md cursor-pointer">
                                             <span className="text-xs font-medium">Delete source</span>
@@ -294,7 +274,7 @@ const DashboardPage: React.FC = () => {
               {/* New Data Source Placeholder Card */}
               <div 
                 className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
-                onClick={() => setActiveView(ViewMode.DATA)}
+                onClick={() => navigate('/data')}
               >
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
                       <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />

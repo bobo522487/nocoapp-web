@@ -1,8 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
     Plus, 
-    Search, 
     File, 
     MoreVertical, 
     Pencil, 
@@ -19,23 +17,23 @@ import {
     TextCursor,
     FileText,
     ChevronDown,
-    ChevronRight,
     Eye
 } from 'lucide-react';
 import ComponentsPanel from './ComponentsPanel';
 import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
-import { Page, GridItemData } from '../../../types';
+import { Page } from '../../../types';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const PagesPanel = () => {
+  const navigate = useNavigate();
+  const { appId } = useParams(); // Get current app context
   const { 
       pages, 
       activePageId, 
-      setActivePageId, 
       addPage, 
       deletePage, 
-      layouts, // Updated to layouts
+      layouts, 
       selectedComponentId, 
       setSelectedComponentId 
   } = useAppStore();
@@ -113,6 +111,12 @@ const PagesPanel = () => {
           height: '800'
       };
       addPage(newPage);
+      navigate(`/apps/${appId || 'default-app'}/pages/${newId}`);
+  };
+
+  const handlePageClick = (pageId: string) => {
+      // Use navigation instead of setting store directly
+      navigate(`/apps/${appId || 'default-app'}/pages/${pageId}`);
   };
 
   const getPageIcon = (iconName: string) => {
@@ -195,7 +199,7 @@ const PagesPanel = () => {
                 return (
                     <div 
                         key={page.id} 
-                        onClick={() => setActivePageId(page.id)}
+                        onClick={() => handlePageClick(page.id)}
                         className={`relative px-3 py-1.5 flex items-center text-sm cursor-pointer transition-colors rounded-sm group mb-0.5 ${
                             isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         }`}

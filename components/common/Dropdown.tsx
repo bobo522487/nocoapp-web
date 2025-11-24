@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, ChevronDown, Check } from 'lucide-react';
@@ -92,7 +91,6 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      // Use capture to detect scroll on any element, but filter inside handleScroll
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleScroll);
     }

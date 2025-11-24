@@ -1,12 +1,13 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Plus, Table, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
+import { useNavigate } from 'react-router-dom';
 
 const TablePanel: React.FC = () => {
-  const { activeTableId, setActiveTableId } = useAppStore();
+  const navigate = useNavigate();
+  const { activeTableId } = useAppStore();
   const [activeMenuTable, setActiveMenuTable] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -24,7 +25,7 @@ const TablePanel: React.FC = () => {
   }, []);
 
   const handleTableClick = (table: string) => {
-    setActiveTableId(table);
+    navigate(`/data/${table}`);
   };
 
   return (

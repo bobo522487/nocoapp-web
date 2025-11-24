@@ -1,5 +1,5 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
+import { HashRouter, Routes, Route, Navigate, useParams, useLocation, Outlet } from 'react-router-dom';
 import ActivityBar from '../components/layout/ActivityBar';
 import Sidebar from '../components/layout/Sidebar';
 import Editor from '../features/editor/components/Editor';
@@ -21,9 +21,111 @@ import {
   DragEndEvent 
 } from '@dnd-kit/core';
 
+// --- Route Wrappers for State Sync ---
+
+const DashboardRoute = () => {
+  const { setActiveView } = useAppStore();
+  useEffect(() => {
+    setActiveView(ViewMode.HOME);
+  }, [setActiveView]);
+  return <DashboardPage />;
+};
+
+const AppBuilderRoute = ({ draggedItem, droppedItem, onItemConsumed }: any) => {
+  const { appId, pageId } = useParams();
+  const { setActiveView, setActivePageId } = useAppStore();
+
+  useEffect(() => {
+    setActiveView(ViewMode.APPS);
+    if (pageId) setActivePageId(pageId);
+  }, [appId, pageId, setActiveView, setActivePageId]);
+
+  return (
+    <AppBuilderPage 
+      draggedItem={draggedItem}
+      droppedItem={droppedItem} 
+      onItemConsumed={onItemConsumed}
+    />
+  );
+};
+
+const DataRoute = () => {
+  const { tableId } = useParams();
+  const { setActiveView, setActiveTableId } = useAppStore();
+
+  useEffect(() => {
+    setActiveView(ViewMode.DATA);
+    if (tableId) setActiveTableId(tableId);
+  }, [tableId, setActiveView, setActiveTableId]);
+
+  return <DataPage />;
+};
+
+const EditorRoute = ({ tabs, activeTabId, activeFileContent, onCloseTab, onSelectTab, onContentChange }: any) => {
+    const { setActiveView } = useAppStore();
+    useEffect(() => {
+        setActiveView(ViewMode.SETTINGS); // reusing Settings view mode for File Editor context
+    }, [setActiveView]);
+
+    return (
+        <Editor 
+            tabs={tabs}
+            activeTabId={activeTabId}
+            activeFileContent={activeFileContent}
+            onCloseTab={onCloseTab}
+            onSelectTab={onSelectTab}
+            onContentChange={onContentChange}
+        />
+    );
+};
+
+// --- Main Layout Component ---
+
+const MainLayout: React.FC<{ 
+  sidebarProps: any, 
+  sidebarWidth: number, 
+  startResizingSidebar: any, 
+  isResizingSidebar: boolean 
+}> = ({ sidebarProps, sidebarWidth, startResizingSidebar, isResizingSidebar }) => {
+  const location = useLocation();
+  const { activeView } = useAppStore();
+  const isHome = activeView === ViewMode.HOME;
+
+  return (
+    <div className={`flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 ${isResizingSidebar ? 'cursor-col-resize select-none' : ''}`}>
+        <Header />
+        
+        <div className="flex-1 flex overflow-hidden">
+          <ActivityBar />
+          
+          {/* Sidebar - Hidden on Home View */}
+          {!isHome && (
+            <>
+              <Sidebar 
+                  {...sidebarProps}
+                  width={sidebarWidth}
+              />
+              <div
+                  className="w-[1px] bg-border hover:bg-primary cursor-col-resize z-50 relative transition-colors"
+                  onMouseDown={startResizingSidebar}
+              >
+                 <div className="absolute inset-y-0 -left-1 w-3 cursor-col-resize z-50" />
+              </div>
+            </>
+          )}
+          
+          {/* Content Area */}
+          <main className="flex-1 flex overflow-hidden relative bg-background min-w-0">
+             <Outlet />
+          </main>
+        </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   // State from Zustand Store
-  const { activeView, isDarkMode } = useAppStore();
+  const { isDarkMode, pages, activeTableId } = useAppStore();
 
   // Local State
   const [files, setFiles] = useState<FileSystemNode[]>(INITIAL_FILES);
@@ -85,7 +187,6 @@ const App: React.FC = () => {
     });
   };
 
-  // Actions
   const handleToggleFolder = (id: string) => {
     const node = findNode(files, id);
     if (node && node.type === FileType.FOLDER) {
@@ -95,7 +196,6 @@ const App: React.FC = () => {
 
   const handleSelectFile = (node: FileSystemNode) => {
     if (node.type === FileType.FILE) {
-      // Check if tab already exists
       const existingTab = tabs.find(t => t.fileId === node.id);
       if (existingTab) {
         setActiveTabId(existingTab.id);
@@ -119,7 +219,6 @@ const App: React.FC = () => {
     
     if (activeTabId === tabId) {
       if (newTabs.length > 0) {
-        // Activate the tab to the left, or the first one
         const newActiveIndex = Math.max(0, tabIndex - 1);
         setActiveTabId(newTabs[newActiveIndex].id);
       } else {
@@ -143,15 +242,12 @@ const App: React.FC = () => {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
     if (over && over.id === 'canvas-droppable') {
-      // Pass the dropped data to the active view (AppBuilderPage -> Canvas)
       setDroppedItem({
         ...active.data.current,
-        id: `widget-${Date.now()}` // Generate a unique ID for the new instance
+        id: `widget-${Date.now()}`
       });
     }
-
     setDraggedItem(null);
   };
 
@@ -160,79 +256,80 @@ const App: React.FC = () => {
   const activeFileNode = activeTab ? findNode(files, activeTab.fileId) : null;
   const activeContent = activeFileNode?.content || '';
 
+  const sidebarProps = {
+      files,
+      onToggleFolder: handleToggleFolder,
+      onSelectFile: handleSelectFile,
+      selectedFileId: activeTab?.fileId || null,
+  };
+
+  // Default Redirects
+  const defaultPageId = pages[0]?.id || 'page-1';
+  const defaultTableId = 'users';
+
   return (
     <DndContext 
       sensors={sensors}
       onDragStart={handleDragStart} 
       onDragEnd={handleDragEnd}
     >
-      <div className={`flex flex-col h-screen w-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-200 ${isResizingSidebar ? 'cursor-col-resize select-none' : ''}`}>
-        
-        <Header />
-
-        {/* Main Layout */}
-        <div className="flex-1 flex overflow-hidden">
-          <ActivityBar />
-          
-          {/* Sidebar and Resizer - Hidden on Home View */}
-          {activeView !== ViewMode.HOME && (
-            <>
-              <Sidebar 
-                  files={files} 
-                  onToggleFolder={handleToggleFolder} 
-                  onSelectFile={handleSelectFile}
-                  selectedFileId={activeTab?.fileId || null}
-                  width={sidebarWidth}
-              />
-              {/* Sidebar Resizer */}
-              <div
-                  className="w-[1px] bg-border hover:bg-primary cursor-col-resize z-50 relative transition-colors"
-                  onMouseDown={startResizingSidebar}
-              >
-                 {/* Invisible Hit Area */}
-                 <div className="absolute inset-y-0 -left-1 w-3 cursor-col-resize z-50" />
-              </div>
-            </>
-          )}
-          
-          {/* Content Area */}
-          <main className="flex-1 flex overflow-hidden relative bg-background min-w-0">
-              {activeView === ViewMode.HOME ? (
-                  <DashboardPage />
-              ) : activeView === ViewMode.APPS ? (
-                  <AppBuilderPage 
-                    draggedItem={draggedItem}
+      <HashRouter>
+        <Routes>
+          <Route element={
+            <MainLayout 
+                sidebarProps={sidebarProps} 
+                sidebarWidth={sidebarWidth} 
+                startResizingSidebar={startResizingSidebar} 
+                isResizingSidebar={isResizingSidebar} 
+            />
+          }>
+             <Route path="/" element={<DashboardRoute />} />
+             
+             {/* App Builder Routes */}
+             <Route path="/apps" element={<Navigate to={`/apps/default-app/pages/${defaultPageId}`} replace />} />
+             <Route path="/apps/:appId" element={<Navigate to={`/apps/default-app/pages/${defaultPageId}`} replace />} />
+             <Route path="/apps/:appId/pages/:pageId" element={
+                 <AppBuilderRoute 
+                    draggedItem={draggedItem} 
                     droppedItem={droppedItem} 
-                    onItemConsumed={() => setDroppedItem(null)}
-                  />
-              ) : activeView === ViewMode.DATA ? (
-                  <DataPage />
-              ) : (
-                  <Editor 
-                      tabs={tabs}
-                      activeTabId={activeTabId}
-                      activeFileContent={activeContent}
-                      onCloseTab={handleCloseTab}
-                      onSelectTab={setActiveTabId}
-                      onContentChange={handleContentChange}
-                  />
-              )}
-          </main>
-        </div>
+                    onItemConsumed={() => setDroppedItem(null)} 
+                 />
+             } />
 
-        {/* Drag Overlay for Visual Feedback */}
-        <DragOverlay>
-          {draggedItem ? (
-            <div className="opacity-80 pointer-events-none transform scale-105 cursor-grabbing">
-               <div className="flex flex-col items-center justify-center p-2 rounded-md border bg-card shadow-xl w-20 h-20">
-                  {draggedItem.icon && <draggedItem.icon size={24} className="text-primary mb-1" />}
-                  <span className="text-[10px] font-medium text-foreground">{draggedItem.name}</span>
-               </div>
-            </div>
-          ) : null}
-        </DragOverlay>
+             {/* Data Modeler Routes */}
+             <Route path="/data" element={<Navigate to={`/data/${defaultTableId}`} replace />} />
+             <Route path="/data/:tableId" element={<DataRoute />} />
 
-      </div>
+             {/* Editor/Settings Route */}
+             <Route path="/files" element={
+                 <EditorRoute 
+                    tabs={tabs}
+                    activeTabId={activeTabId}
+                    activeFileContent={activeContent}
+                    onCloseTab={handleCloseTab}
+                    onSelectTab={setActiveTabId}
+                    onContentChange={handleContentChange}
+                 />
+             } />
+
+             {/* Fallback */}
+             <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+
+      {/* Drag Overlay for Visual Feedback */}
+      <DragOverlay>
+        {draggedItem ? (
+          <div className="opacity-80 pointer-events-none transform scale-105 cursor-grabbing">
+             <div className="flex flex-col items-center justify-center p-2 rounded-md border bg-card shadow-xl w-20 h-20">
+                {draggedItem.icon && <draggedItem.icon size={24} className="text-primary mb-1" />}
+                <span className="text-[10px] font-medium text-foreground">{draggedItem.name}</span>
+             </div>
+          </div>
+        ) : null}
+      </DragOverlay>
+
     </DndContext>
   );
 };

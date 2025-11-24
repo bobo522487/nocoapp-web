@@ -35,10 +35,13 @@ const PagesPanel = () => {
       setActivePageId, 
       addPage, 
       deletePage, 
-      layout, 
+      layouts, // Updated to layouts
       selectedComponentId, 
       setSelectedComponentId 
   } = useAppStore();
+
+  // Use LG layout for outline view source of truth
+  const desktopLayout = layouts['lg'] || [];
 
   const [activeMenuPage, setActiveMenuPage] = useState<string | null>(null);
   const [showComponents, setShowComponents] = useState(false);
@@ -72,20 +75,6 @@ const PagesPanel = () => {
   useEffect(() => {
       const handleMouseMove = (e: MouseEvent) => {
           if (isResizing) {
-            // We need to calculate height relative to the panel top or window
-            // Simplified: let's just use delta from previous y if we had ref, 
-            // but here we can check bounding rect of container if needed.
-            // A simpler approach for vertical resize is to just track movement.
-            // Let's rely on `movementY` or absolute calculation.
-            // To be robust, let's assume the top of the pages panel is static relative to the mouse.
-            // Better: use the offset from the top of the sidebar container.
-            
-            // Since we don't have easy access to container offset without refs everywhere, 
-            // we can just constrain it reasonably.
-            
-            // We'll use a safer approach:
-            // Calculate new height based on mouse Y position minus the Sidebar header offset (~100px)
-            // This is an approximation but works well for fixed layouts.
             const newHeight = e.clientY - 120; // 120px approx header offset
             if (newHeight > 100 && newHeight < window.innerHeight - 200) {
                 setPagesHeight(newHeight);
@@ -282,12 +271,12 @@ const PagesPanel = () => {
                  
                  {/* Children (Components) */}
                  <div className="ml-4 border-l border-border/50 pl-1">
-                     {layout.length === 0 ? (
+                     {desktopLayout.length === 0 ? (
                          <div className="px-3 py-2 text-[10px] text-muted-foreground italic">
                              No components
                          </div>
                      ) : (
-                         layout.map((item) => {
+                         desktopLayout.map((item) => {
                              const isSelected = item.i === selectedComponentId;
                              return (
                                  <div 

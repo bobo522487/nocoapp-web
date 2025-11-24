@@ -118,8 +118,8 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
       pages, 
       activePageId, 
       updatePage,
-      layout,
-      setLayout,
+      layouts,
+      setLayouts,
       selectedComponentId,
       setSelectedComponentId,
       updateLayoutItem
@@ -129,7 +129,9 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
 
   // Derived active page
   const activePage = pages.find(p => p.id === activePageId);
-  const selectedItem = layout.find(i => i.i === selectedComponentId);
+  
+  // Get selected item properties. We use the 'lg' (desktop) layout as the source of truth for component metadata.
+  const selectedItem = layouts['lg']?.find(i => i.i === selectedComponentId) || null;
 
   const { width, startResizing } = useResizable({
     initialWidth: 260,
@@ -139,8 +141,8 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
   });
 
   const handleClearCanvas = () => {
-    // Immediate clear without confirmation dialog to avoid blocking UI events
-    setLayout([]);
+    // Clear layouts for all breakpoints
+    setLayouts({ lg: [] });
     setSelectedComponentId(null);
   };
 
@@ -165,8 +167,8 @@ const AppBuilderPage: React.FC<AppBuilderPageProps> = ({ draggedItem, droppedIte
                draggedItem={draggedItem}
                droppedItem={droppedItem}
                onItemConsumed={onItemConsumed}
-               layout={layout}
-               onLayoutChange={setLayout}
+               layouts={layouts}
+               onLayoutChange={setLayouts}
                selectedItemId={selectedComponentId}
                onSelectItem={setSelectedComponentId}
              />

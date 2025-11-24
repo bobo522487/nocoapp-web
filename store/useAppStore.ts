@@ -18,9 +18,9 @@ interface AppState {
   deletePage: (id: string) => void;
 
   // App Builder / Layout State
-  layout: GridItemData[];
+  layouts: Record<string, GridItemData[]>;
   selectedComponentId: string | null;
-  setLayout: (layout: GridItemData[]) => void;
+  setLayouts: (layouts: Record<string, GridItemData[]>) => void;
   setSelectedComponentId: (id: string | null) => void;
   updateLayoutItem: (id: string, updates: Partial<GridItemData>) => void;
 }
@@ -64,11 +64,18 @@ export const useAppStore = create<AppState>((set) => ({
   })),
 
   // Layout State Implementation
-  layout: INITIAL_LAYOUT,
+  layouts: { lg: INITIAL_LAYOUT }, // Initialize with desktop layout
   selectedComponentId: null,
-  setLayout: (layout) => set({ layout }),
+  setLayouts: (layouts) => set({ layouts }),
   setSelectedComponentId: (id) => set({ selectedComponentId: id }),
-  updateLayoutItem: (id, updates) => set((state) => ({
-    layout: state.layout.map(item => item.i === id ? { ...item, ...updates } : item)
-  })),
+  updateLayoutItem: (id, updates) => set((state) => {
+    // Update the item in ALL breakpoints to keep content/properties in sync across devices
+    const newLayouts: Record<string, GridItemData[]> = {};
+    Object.keys(state.layouts).forEach(bp => {
+        newLayouts[bp] = state.layouts[bp].map(item => 
+          item.i === id ? { ...item, ...updates } : item
+        );
+    });
+    return { layouts: newLayouts };
+  }),
 }));

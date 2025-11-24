@@ -28,7 +28,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   selectedId,
   onSelect,
   searchPlaceholder = "Search...",
-  width = 288,
+  width = 240,
   footer,
   className = ""
 }) => {
@@ -39,20 +39,23 @@ const Dropdown: React.FC<DropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleDropdown = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
+    
     if (!isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setPosition({
         top: rect.bottom + 4,
         left: rect.left
       });
+      setSearchTerm('');
     }
     setIsOpen(!isOpen);
-    setSearchTerm('');
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside both the dropdown content AND the trigger
       if (
         dropdownRef.current && 
         !dropdownRef.current.contains(event.target as Node) &&
@@ -63,12 +66,17 @@ const Dropdown: React.FC<DropdownProps> = ({
       }
     };
 
-    const handleScroll = () => {
+    const handleScroll = (event: Event) => {
+      // Ignore scrolls happening inside the dropdown itself
+      if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+        return;
+      }
       if (isOpen) setIsOpen(false);
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      // Use capture to detect scroll on any element, but filter inside handleScroll
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleScroll);
     }
@@ -94,23 +102,23 @@ const Dropdown: React.FC<DropdownProps> = ({
   const DropdownContent = (
     <div 
       ref={dropdownRef}
-      className="fixed z-[100] bg-white dark:bg-[#1e1e1e] border border-ide-border rounded-md shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col"
+      className="fixed z-[100] bg-popover text-popover-foreground border border-border rounded-lg shadow-md overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col"
       style={{ 
         top: position.top, 
         left: position.left,
         width: width
       }}
+      onMouseDown={(e) => e.stopPropagation()} // Prevent closing when clicking inside
     >
       {/* Search */}
-      <div className="flex items-center px-3 border-b border-ide-border">
-        <Search size={14} className="shrink-0 opacity-50 text-ide-text" />
+      <div className="flex items-center px-3 border-b border-border/50">
+        <Search size={14} className="shrink-0 opacity-50 text-muted-foreground" />
         <input 
-          className="flex h-9 w-full rounded-md bg-transparent py-3 px-2 text-sm outline-none placeholder-gray-400 dark:placeholder-gray-600 border-none focus:ring-0 text-ide-text" 
+          className="flex h-9 w-full rounded-md bg-transparent py-3 px-2 text-sm outline-none placeholder:text-muted-foreground border-none focus:ring-0 text-foreground" 
           placeholder={searchPlaceholder}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           autoFocus
-          onClick={(e) => e.stopPropagation()}
         />
       </div>
 
@@ -119,7 +127,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         {Object.entries(groupedItems).map(([group, groupItems]: [string, DropdownItem[]]) => (
           <div key={group}>
              {group !== 'General' && (
-                <div className="px-2 py-1.5 text-[10px] font-mono font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <div className="px-2 py-1.5 text-[10px] font-mono font-medium text-muted-foreground uppercase tracking-wider">
                   {group}
                 </div>
              )}
@@ -131,27 +139,27 @@ const Dropdown: React.FC<DropdownProps> = ({
                    onSelect(item);
                    setIsOpen(false);
                  }}
-                 className={`relative flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none cursor-pointer select-none transition-colors ${
+                 className={`relative flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium outline-none cursor-pointer select-none transition-colors ${
                    selectedId === item.id 
-                   ? 'bg-gray-100 dark:bg-[#2b2b2b] text-ide-text' 
-                   : 'text-ide-text hover:bg-gray-100 dark:hover:bg-[#2b2b2b]'
+                   ? 'bg-accent text-accent-foreground' 
+                   : 'text-foreground hover:bg-muted hover:text-foreground'
                  }`}
                >
-                 {item.icon && <item.icon size={14} className="text-gray-400" />}
+                 {item.icon && <item.icon size={14} className="text-muted-foreground" />}
                  <span className="flex-1 truncate">{item.label}</span>
-                 {selectedId === item.id && <Check size={14} className="text-blue-500" />}
+                 {selectedId === item.id && <Check size={14} className="text-primary" />}
                </div>
              ))}
           </div>
         ))}
         {filteredItems.length === 0 && (
-            <div className="px-2 py-4 text-center text-xs text-gray-500">No results found</div>
+            <div className="px-2 py-4 text-center text-xs text-muted-foreground">No results found</div>
         )}
       </div>
 
       {/* Footer */}
       {footer && (
-        <div className="border-t border-ide-border p-1">
+        <div className="border-t border-border p-1 bg-muted/20">
            {footer}
         </div>
       )}
@@ -162,14 +170,14 @@ const Dropdown: React.FC<DropdownProps> = ({
     <>
       <div 
         ref={triggerRef}
-        onClick={toggleDropdown}
-        className={`flex items-center gap-2 hover:bg-ide-hover px-2 py-1.5 rounded cursor-pointer transition-colors group select-none ${
-            isOpen ? 'bg-ide-hover' : ''
+        onMouseDown={toggleDropdown} // Use onMouseDown to prevent focus loss/click timing issues
+        className={`flex items-center gap-2 hover:bg-muted/50 px-2 py-1.5 rounded-md cursor-pointer transition-colors group select-none ${
+            isOpen ? 'bg-muted/50' : ''
         } ${className}`}
       >
-         {Icon && <Icon size={16} className="text-gray-500 dark:text-gray-400" />}
-         <span className="text-sm font-medium text-ide-text truncate max-w-[150px]">{triggerLabel}</span>
-         <ChevronDown size={14} className="text-gray-400 group-hover:text-ide-text shrink-0" />
+         {Icon && <Icon size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />}
+         <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[150px]">{triggerLabel}</span>
+         <ChevronDown size={14} className="text-muted-foreground group-hover:text-foreground shrink-0 transition-colors" />
       </div>
       {isOpen && createPortal(DropdownContent, document.body)}
     </>

@@ -50,11 +50,11 @@ const Breadcrumb: React.FC = () => {
   ];
 
   const Separator = () => (
-    <span className="text-gray-300 dark:text-gray-700 mx-1 text-lg font-light">/</span>
+    <span className="text-muted-foreground/40 mx-1 text-lg font-light">/</span>
   );
 
   return (
-    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+    <div className="flex items-center text-sm">
         {/* 1. Organization Selector (Always Visible) */}
         <Dropdown
             triggerLabel={selectedOrg.label}
@@ -64,8 +64,8 @@ const Breadcrumb: React.FC = () => {
             onSelect={(item) => setSelectedOrg({ id: item.id, label: item.label })}
             searchPlaceholder="Find organization..."
             footer={
-                <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-gray-100 dark:hover:bg-[#2b2b2b] cursor-pointer w-full text-ide-text gap-2 transition-colors">
-                    <Plus size={14} />
+                <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
+                    <Plus size={14} className="text-muted-foreground" />
                     <span>New Organization</span>
                 </div>
             }
@@ -83,8 +83,8 @@ const Breadcrumb: React.FC = () => {
                     onSelect={(item) => setSelectedApp({ id: item.id, label: item.label })}
                     searchPlaceholder="Find app..."
                     footer={
-                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-gray-100 dark:hover:bg-[#2b2b2b] cursor-pointer w-full text-ide-text gap-2 transition-colors">
-                            <Plus size={14} />
+                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
+                            <Plus size={14} className="text-muted-foreground" />
                             <span>New App</span>
                         </div>
                     }
@@ -98,8 +98,8 @@ const Breadcrumb: React.FC = () => {
                     onSelect={(item) => setSelectedPage({ id: item.id, label: item.label })}
                     searchPlaceholder="Find page..."
                      footer={
-                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-gray-100 dark:hover:bg-[#2b2b2b] cursor-pointer w-full text-ide-text gap-2 transition-colors">
-                            <Plus size={14} />
+                         <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
+                            <Plus size={14} className="text-muted-foreground" />
                             <span>New Page</span>
                         </div>
                     }
@@ -119,8 +119,8 @@ const Breadcrumb: React.FC = () => {
                     onSelect={(item) => setSelectedSource({ id: item.id, label: item.label })}
                     searchPlaceholder="Find data source..."
                     footer={
-                        <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-gray-100 dark:hover:bg-[#2b2b2b] cursor-pointer w-full text-ide-text gap-2 transition-colors">
-                            <Plus size={14} />
+                        <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
+                            <Plus size={14} className="text-muted-foreground" />
                             <span>New Source</span>
                         </div>
                     }
@@ -134,8 +134,8 @@ const Breadcrumb: React.FC = () => {
                     onSelect={(item) => setSelectedTable({ id: item.id, label: item.label })}
                     searchPlaceholder="Find table..."
                     footer={
-                        <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-gray-100 dark:hover:bg-[#2b2b2b] cursor-pointer w-full text-ide-text gap-2 transition-colors">
-                            <Plus size={14} />
+                        <div className="relative flex select-none items-center rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-muted cursor-pointer w-full text-foreground gap-2 transition-colors">
+                            <Plus size={14} className="text-muted-foreground" />
                             <span>New Table</span>
                         </div>
                     }

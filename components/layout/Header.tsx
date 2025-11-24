@@ -10,24 +10,18 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center justify-between px-4">
+      <div className="flex h-14 items-center justify-between pr-4">
         {/* Left: Logo & Context Navigation */}
-        <div className="flex items-center gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 select-none cursor-pointer group">
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm transition-colors">
-              <Blocks size={24} className="text-primary-foreground" strokeWidth={2} />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-foreground font-sans">
-              NOCO <span className="text-primary">APP</span>
-            </span>
+        <div className="flex items-center">
+          {/* Logo - Icon aligned with ActivityBar (w-14) */}
+          <div className="w-14 h-14 flex items-center justify-center shrink-0">
+            <Blocks size={24} className="text-primary" strokeWidth={2} />
           </div>
 
-          {/* Divider */}
-          <div className="h-5 w-px bg-border"></div>
-
           {/* Breadcrumb */}
-          <Breadcrumb />
+          <div className="pl-2">
+            <Breadcrumb />
+          </div>
         </div>
 
         {/* Right: Tools & Profile */}

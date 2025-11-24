@@ -122,9 +122,6 @@ const DashboardPage: React.FC = () => {
                       <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input placeholder="Search applications..." className="h-8 pl-8 text-xs bg-muted/30" />
                   </div>
-                  <Button size="sm" onClick={() => setActiveView(ViewMode.APPS)} className="h-8 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white">
-                      <Plus size={14} className="mr-1.5" /> New Application
-                  </Button>
               </div>
           </div>
 
@@ -225,14 +222,6 @@ const DashboardPage: React.FC = () => {
                   <h2 className="text-lg font-semibold text-foreground">Data Sources</h2>
                   <Badge variant="secondary" className="text-xs font-normal bg-muted text-muted-foreground hover:bg-muted">{dataSources.length}</Badge>
               </div>
-              <Button 
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs font-medium"
-                  onClick={() => setActiveView(ViewMode.DATA)}
-              >
-                  Connect Data <Plus size={14} className="ml-1.5" />
-              </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -301,6 +290,17 @@ const DashboardPage: React.FC = () => {
                       </div>
                   </div>
               ))}
+
+              {/* New Data Source Placeholder Card */}
+              <div 
+                className="group relative flex flex-col items-center justify-center rounded-lg border border-dashed border-border/80 bg-muted/5 overflow-hidden hover:border-blue-500/50 hover:bg-muted/20 transition-all cursor-pointer h-[150px]"
+                onClick={() => setActiveView(ViewMode.DATA)}
+              >
+                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:bg-background group-hover:shadow-sm transition-all">
+                      <Plus size={20} className="text-muted-foreground group-hover:text-blue-500" />
+                  </div>
+                  <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">Create New Data Source</span>
+              </div>
           </div>
         </div>
       </div>

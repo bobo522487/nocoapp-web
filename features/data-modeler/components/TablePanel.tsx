@@ -1,16 +1,135 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files, Eye } from 'lucide-react';
+import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files, Eye, GripVertical } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
 import { DbTable } from '../../../types';
+import { 
+    DndContext, 
+    closestCenter, 
+    PointerSensor, 
+    useSensor, 
+    useSensors, 
+    DragOverlay, 
+    defaultDropAnimationSideEffects, 
+    DropAnimation,
+    DragStartEvent,
+    DragEndEvent
+} from '@dnd-kit/core';
+import { 
+    SortableContext, 
+    verticalListSortingStrategy, 
+    useSortable 
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SortableTableItemProps {
+    table: DbTable;
+    isActive: boolean;
+    isRenaming: boolean;
+    searchTerm: string;
+    onSelect: (id: string) => void;
+    onMenuOpen: (e: React.MouseEvent, id: string) => void;
+    renameValue: string;
+    setRenameValue: (val: string) => void;
+    saveRename: () => void;
+    handleRenameKeyDown: (e: React.KeyboardEvent) => void;
+    renameInputRef: React.RefObject<HTMLInputElement>;
+}
+
+const SortableTableItem = ({
+    table,
+    isActive,
+    isRenaming,
+    searchTerm,
+    onSelect,
+    onMenuOpen,
+    renameValue,
+    setRenameValue,
+    saveRename,
+    handleRenameKeyDown,
+    renameInputRef
+}: SortableTableItemProps) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: table.id, disabled: !!searchTerm });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+    };
+
+    return (
+        <div 
+            ref={setNodeRef}
+            style={style}
+            onClick={() => onSelect(table.id)}
+            className={`relative px-4 py-2 flex items-center gap-2 text-sm cursor-pointer transition-colors group ${
+                isActive 
+                ? 'bg-accent text-accent-foreground font-medium' 
+                : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+            } ${isDragging ? 'opacity-50 z-50 bg-muted' : ''}`}
+        >
+             {/* Grip for Dragging */}
+             {!isRenaming && !searchTerm && (
+                <div {...attributes} {...listeners} className="opacity-0 group-hover:opacity-100 cursor-grab p-1 hover:bg-muted rounded -ml-2">
+                    <GripVertical size={12} className="text-muted-foreground" />
+                </div>
+            )}
+
+            <div className="flex flex-col items-center justify-center pt-0.5">
+                {table.kind === 'view' ? (
+                    <Eye size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                ) : (
+                    <Table size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                )}
+            </div>
+            
+            {isRenaming ? (
+                <input
+                    ref={renameInputRef}
+                    type="text"
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    onBlur={saveRename}
+                    onKeyDown={handleRenameKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
+                />
+            ) : (
+                <div className="flex flex-col flex-1 min-w-0">
+                    <span className="truncate leading-tight">{table.name}</span>
+                </div>
+            )}
+            
+            {/* Action Menu Button */}
+            {!isRenaming && (
+                <div 
+                    className={`rounded opacity-0 group-hover:opacity-100 transition-opacity`}
+                    onClick={(e) => onMenuOpen(e, table.id)}
+                >
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                        <MoreVertical size={14} />
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const TablePanel: React.FC = () => {
   const navigate = useNavigate();
-  const { tables, activeTableId, addTable, updateTable, deleteTable } = useAppStore();
+  const { tables, activeTableId, addTable, updateTable, deleteTable, reorderTables } = useAppStore();
   
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -23,6 +142,16 @@ const TablePanel: React.FC = () => {
   const renameInputRef = useRef<HTMLInputElement>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // DnD Sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+        activationConstraint: {
+            distance: 5,
+        },
+    })
+  );
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   // Handle Outside Click and Scroll to Close Menu
   useEffect(() => {
@@ -114,7 +243,6 @@ const TablePanel: React.FC = () => {
 
   const saveRename = () => {
       if (renamingId && renameValue.trim()) {
-          // Also simple slugify for code if it was default? For now just update name.
           updateTable(renamingId, { name: renameValue.trim() });
       }
       setRenamingId(null);
@@ -139,6 +267,39 @@ const TablePanel: React.FC = () => {
     t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     t.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const activeDragItem = activeDragId ? tables.find(t => t.id === activeDragId) : null;
+
+  // DnD Handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDragId(null);
+
+    if (over && active.id !== over.id) {
+        const oldIndex = tables.findIndex((t) => t.id === active.id);
+        const newIndex = tables.findIndex((t) => t.id === over.id);
+        
+        const newTables = [...tables];
+        const [movedItem] = newTables.splice(oldIndex, 1);
+        newTables.splice(newIndex, 0, movedItem);
+        
+        reorderTables(newTables);
+    }
+  };
+
+  const dropAnimation: DropAnimation = {
+      sideEffects: defaultDropAnimationSideEffects({
+        styles: {
+          active: {
+            opacity: '0.5',
+          },
+        },
+      }),
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -179,59 +340,49 @@ const TablePanel: React.FC = () => {
                 />
             </div>
 
-            {filteredTables.map(table => {
-                const isActive = activeTableId === table.id;
-                const isRenaming = renamingId === table.id;
-                
-                return (
-                    <div 
-                        key={table.id} 
-                        onClick={() => handleTableClick(table.id)}
-                        className={`relative px-4 py-2 flex items-center gap-2 text-sm cursor-pointer transition-colors group ${
-                            isActive 
-                            ? 'bg-accent text-accent-foreground font-medium' 
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        }`}
-                    >
-                        <div className="flex flex-col items-center justify-center pt-0.5">
-                            {table.kind === 'view' ? (
-                                <Eye size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
-                            ) : (
-                                <Table size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
-                            )}
+            <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+            >
+                <SortableContext 
+                    items={filteredTables.map(t => t.id)} 
+                    strategy={verticalListSortingStrategy}
+                >
+                    {filteredTables.map(table => (
+                        <SortableTableItem
+                            key={table.id}
+                            table={table}
+                            isActive={activeTableId === table.id}
+                            isRenaming={renamingId === table.id}
+                            searchTerm={searchTerm}
+                            onSelect={handleTableClick}
+                            onMenuOpen={handleMenuOpen}
+                            renameValue={renameValue}
+                            setRenameValue={setRenameValue}
+                            saveRename={saveRename}
+                            handleRenameKeyDown={handleRenameKeyDown}
+                            renameInputRef={renameInputRef}
+                        />
+                    ))}
+                </SortableContext>
+
+                <DragOverlay dropAnimation={dropAnimation}>
+                    {activeDragItem ? (
+                        <div className="flex items-center px-4 py-2 bg-background border border-primary/50 shadow-lg rounded opacity-80 gap-2">
+                             <div className="flex flex-col items-center justify-center pt-0.5">
+                                {activeDragItem.kind === 'view' ? (
+                                    <Eye size={14} className="text-primary" />
+                                ) : (
+                                    <Table size={14} className="text-primary" />
+                                )}
+                            </div>
+                            <span className="text-sm font-medium">{activeDragItem.name}</span>
                         </div>
-                        
-                        {isRenaming ? (
-                            <input
-                                ref={renameInputRef}
-                                type="text"
-                                value={renameValue}
-                                onChange={(e) => setRenameValue(e.target.value)}
-                                onBlur={saveRename}
-                                onKeyDown={handleRenameKeyDown}
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
-                            />
-                        ) : (
-                            <div className="flex flex-col flex-1 min-w-0">
-                                <span className="truncate leading-tight">{table.name}</span>
-                            </div>
-                        )}
-                        
-                        {/* Action Menu Button */}
-                        {!isRenaming && (
-                            <div 
-                                className={`rounded opacity-0 group-hover:opacity-100 transition-opacity ${activeMenu?.id === table.id ? 'opacity-100' : ''}`}
-                                onClick={(e) => handleMenuOpen(e, table.id)}
-                            >
-                                <Button variant="ghost" size="icon" className="h-6 w-6">
-                                    <MoreVertical size={14} />
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
          </div>
 
          {/* Portal for Context Menu */}

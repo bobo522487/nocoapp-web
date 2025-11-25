@@ -25,6 +25,7 @@ interface AppState {
   addPage: (page: Page) => void;
   deletePage: (id: string) => void;
   togglePageFolder: (id: string) => void;
+  reorderPages: (pages: Page[]) => void;
 
   // Data State
   tables: DbTable[];
@@ -34,6 +35,7 @@ interface AppState {
   addTable: (table: DbTable) => void;
   updateTable: (id: string, updates: Partial<DbTable>) => void;
   deleteTable: (id: string) => void;
+  reorderTables: (tables: DbTable[]) => void;
 
   // App Builder / Layout State
   pageLayouts: Record<string, Record<string, GridItemData[]>>;
@@ -111,6 +113,7 @@ export const useAppStore = create<AppState>((set) => ({
   togglePageFolder: (id) => set((state) => ({
     pages: state.pages.map(p => p.id === id ? { ...p, isOpen: !p.isOpen } : p)
   })),
+  reorderPages: (pages) => set({ pages }),
 
   // Data State
   tables: INITIAL_TABLES,
@@ -127,6 +130,7 @@ export const useAppStore = create<AppState>((set) => ({
         ? state.tables.find(t => t.id !== id)?.id || ''
         : state.activeTableId
   })),
+  reorderTables: (tables) => set({ tables }),
 
   // Layout State Implementation
   pageLayouts: INITIAL_PAGE_LAYOUTS,

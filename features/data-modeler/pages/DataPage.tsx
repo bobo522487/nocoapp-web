@@ -118,6 +118,8 @@ const DataPage: React.FC = () => {
                   const config = TYPE_CONFIG[value as string];
                   if (!config.pk && updated.isPrimary) updated.isPrimary = false;
                   if (!config.unique && updated.isUnique) updated.isUnique = false;
+                  // Note: fk is not tracked in SchemaField interface directly as a boolean, 
+                  // but we disable the "Add Relation" button based on config.
                   
                   // Update icon based on type
                   switch(value) {
@@ -267,7 +269,9 @@ const DataPage: React.FC = () => {
                     checked={row.isNullable} 
                     onCheckedChange={(checked) => handleSchemaChange(row.id, 'isNullable', checked)}
                     className="scale-75"
-                    // Not Null is supported for all types in the config, so we allow toggling 'isNullable' (effectively toggling Not Null constraint)
+                    // If notNull is true, it means the column supports Not Null.
+                    // If we want to strictly allow toggling, we check if the type supports Not Null constraint. 
+                    // Based on the user table, all types support Not Null.
                     disabled={!TYPE_CONFIG[row.type].notNull}
                   />
               </div>

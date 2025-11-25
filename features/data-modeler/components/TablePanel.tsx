@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Copy, Lock } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
@@ -10,7 +11,8 @@ const TablePanel: React.FC = () => {
   const navigate = useNavigate();
   const { tables, activeTableId, addTable, updateTable, deleteTable } = useAppStore();
   
-  const [activeMenuTable, setActiveMenuTable] = useState<string | null>(null);
+  // State for Menu Position and Active Item
+  const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   
   // Rename State
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -19,18 +21,34 @@ const TablePanel: React.FC = () => {
 
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Handle Outside Click and Scroll to Close Menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenuTable(null);
+        setActiveMenu(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    const handleScroll = () => {
+       if (activeMenu) setActiveMenu(null);
+    };
+    
+    const handleResize = () => {
+        if (activeMenu) setActiveMenu(null);
+    };
+
+    if (activeMenu) {
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('resize', handleResize);
+    }
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [activeMenu]);
 
   // Focus input when renaming starts
   useEffect(() => {
@@ -45,17 +63,35 @@ const TablePanel: React.FC = () => {
     navigate(`/data/${tableId}`);
   };
 
+  const handleMenuOpen = (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      setActiveMenu({
+          id,
+          x: rect.left,
+          y: rect.bottom + 4
+      });
+  };
+
   const handleAddTable = () => {
       const newId = `table_${Date.now()}`;
       addTable({ id: newId, name: 'New Table' });
       navigate(`/data/${newId}`);
+  };
+  
+  const handleDuplicateTable = (table: DbTable, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const newId = `${table.id}_copy_${Math.floor(Math.random() * 1000)}`;
+      const newName = `${table.name} copy`;
+      addTable({ id: newId, name: newName });
+      setActiveMenu(null);
   };
 
   const startRenaming = (table: DbTable, e: React.MouseEvent) => {
       e.stopPropagation();
       setRenamingId(table.id);
       setRenameValue(table.name);
-      setActiveMenuTable(null);
+      setActiveMenu(null);
   };
 
   const saveRename = () => {
@@ -142,7 +178,7 @@ const TablePanel: React.FC = () => {
                                 onBlur={saveRename}
                                 onKeyDown={handleRenameKeyDown}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-1 min-w-0 h-6 bg-background border border-primary/50 rounded-sm px-1 text-xs outline-none text-foreground"
+                                className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
                             />
                         ) : (
                             <span className="flex-1 truncate">{table.name}</span>
@@ -151,83 +187,64 @@ const TablePanel: React.FC = () => {
                         {/* Action Menu Button */}
                         {!isRenaming && (
                             <div 
-                                className={`rounded opacity-0 group-hover:opacity-100 transition-opacity ${activeMenuTable === table.id ? 'opacity-100' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveMenuTable(activeMenuTable === table.id ? null : table.id);
-                                }}
+                                className={`rounded opacity-0 group-hover:opacity-100 transition-opacity ${activeMenu?.id === table.id ? 'opacity-100' : ''}`}
+                                onClick={(e) => handleMenuOpen(e, table.id)}
                             >
                                 <Button variant="ghost" size="icon" className="h-6 w-6">
                                     <MoreVertical size={14} />
                                 </Button>
                             </div>
                         )}
-
-                        {/* Context Menu */}
-                        {activeMenuTable === table.id && (
-                        <div 
-                            ref={menuRef}
-                            className="absolute right-2 top-8 w-60 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col py-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Header */}
-                            <div className="px-3 py-2">
-                                <div className="flex items-center justify-between bg-muted/50 rounded border border-border/50 p-1.5 group/header hover:border-border transition-colors cursor-text" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex flex-col gap-0.5 overflow-hidden">
-                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">TABLE ID</span>
-                                         <span className="text-xs font-mono font-medium truncate" title={table.id}>{table.id}</span>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 opacity-0 group-hover/header:opacity-100 transition-opacity" title="Copy ID">
-                                         <Copy size={12} />
-                                    </Button>
-                                </div>
-                            </div>
-                            
-                            <div className="h-px bg-border/50 mx-2 my-1" />
-
-                            {/* Actions */}
-                            <button 
-                                onClick={(e) => startRenaming(table, e)}
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors"
-                            >
-                                <Pencil size={14} className="opacity-70" /> Rename table
-                            </button>
-
-                             <button 
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors"
-                            >
-                                <Copy size={14} className="opacity-70" /> Duplicate table
-                            </button>
-
-                            <div className="h-px bg-border/50 mx-2 my-1" />
-
-                             <button 
-                                className="flex items-center justify-between px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors group/item"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Lock size={14} className="opacity-70" /> Edit permissions
-                                </div>
-                                <span className="text-[9px] font-bold text-sky-700 bg-sky-100 dark:text-sky-300 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-800 px-1.5 rounded-sm">Plus</span>
-                            </button>
-
-                            <div className="h-px bg-border/50 mx-2 my-1" />
-
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTable(table.id);
-                                    setActiveMenuTable(null);
-                                }}
-                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 mx-1 rounded-md transition-colors"
-                            >
-                                <Trash2 size={14} /> Delete table
-                            </button>
-                        </div>
-                        )}
                     </div>
                 );
             })}
          </div>
+
+         {/* Portal for Context Menu */}
+         {activeMenu && createPortal(
+            <div 
+                ref={menuRef}
+                className="fixed z-[9999] w-64 bg-popover border border-border rounded-lg shadow-xl overflow-hidden flex flex-col py-1 animate-in fade-in zoom-in-95 duration-100"
+                style={{ top: activeMenu.y, left: activeMenu.x }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {tables.find(t => t.id === activeMenu.id) && (
+                    <div className="flex flex-col py-1">
+                        {/* Rename */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => startRenaming(tables.find(t => t.id === activeMenu.id)!, e)} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
+                            >
+                                <Pencil size={14} className="opacity-70" /> Rename table
+                            </button>
+                        </div>
+
+                        {/* Duplicate */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => handleDuplicateTable(tables.find(t => t.id === activeMenu.id)!, e)} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
+                            >
+                                <Files size={14} className="opacity-70" /> Duplicate table
+                            </button>
+                        </div>
+
+                        {/* Delete */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); deleteTable(activeMenu.id); setActiveMenu(null); }} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-md transition-colors gap-2"
+                            >
+                                <Trash2 size={14} /> Delete table
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>,
+            document.body
+         )}
+
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
     Plus, 
     File, 
@@ -20,7 +20,8 @@ import {
     TextCursor,
     FileText,
     ChevronDown,
-    Eye
+    Eye,
+    Files
 } from 'lucide-react';
 import ComponentsPanel from './ComponentsPanel';
 import { Button } from "../../../components/ui/button";
@@ -43,7 +44,7 @@ const PagesPanel = () => {
       activeDevice 
   } = useAppStore();
 
-  const [activeMenuPage, setActiveMenuPage] = useState<string | null>(null);
+  const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   const [showComponents, setShowComponents] = useState(false);
   const [pagesHeight, setPagesHeight] = useState(250);
   const [isResizing, setIsResizing] = useState(false);
@@ -58,7 +59,6 @@ const PagesPanel = () => {
   const splitterRef = useRef<HTMLDivElement>(null);
 
   // Derive layout key from activeDevice
-  // Mapping matches Canvas breakpoints logic
   const getLayoutKey = (device: string) => {
       switch(device) {
           case 'mobile': return 'xxs'; // 375px -> xxs
@@ -69,14 +69,13 @@ const PagesPanel = () => {
 
   const currentLayoutKey = getLayoutKey(activeDevice);
   const currentLayouts = pageLayouts[activePageId] || { lg: [] };
-  // Fallback to lg if specific breakpoint layout is empty (though Canvas syncs all)
   const visibleLayout = currentLayouts[currentLayoutKey] || [];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Menu Logic
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenuPage(null);
+        setActiveMenu(null);
       }
       
       // Components Panel Logic
@@ -85,11 +84,25 @@ const PagesPanel = () => {
       }
     };
 
+    const handleScroll = () => {
+        if (activeMenu) setActiveMenu(null);
+    };
+    
+    const handleResize = () => {
+        if (activeMenu) setActiveMenu(null);
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    if (activeMenu) {
+        window.addEventListener('scroll', handleScroll, true);
+        window.addEventListener('resize', handleResize);
+    }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
-  }, [showComponents, activeMenuPage]);
+  }, [showComponents, activeMenu]);
 
   // Focus input when renaming starts
   useEffect(() => {
@@ -129,6 +142,16 @@ const PagesPanel = () => {
       };
   }, [isResizing]);
 
+  const handleMenuOpen = (e: React.MouseEvent, id: string) => {
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      setActiveMenu({
+          id,
+          x: rect.left,
+          y: rect.bottom + 4
+      });
+  };
+
   const handleAddPage = () => {
       const newId = `page-${Date.now()}`;
       const newPage: Page = {
@@ -144,6 +167,19 @@ const PagesPanel = () => {
       navigate(`/apps/${appId || 'default-app'}/pages/${newId}`);
   };
 
+  const handleDuplicatePage = (page: Page, e: React.MouseEvent) => {
+      e.stopPropagation();
+      const newId = `page-${Date.now()}`;
+      const newPage: Page = {
+          ...page,
+          id: newId,
+          name: `${page.name} Copy`,
+          isHome: false
+      };
+      addPage(newPage);
+      setActiveMenu(null);
+  };
+
   const handlePageClick = (pageId: string) => {
       if (renamingId === pageId) return; // Don't navigate while renaming
       navigate(`/apps/${appId || 'default-app'}/pages/${pageId}`);
@@ -153,7 +189,7 @@ const PagesPanel = () => {
       e.stopPropagation();
       setRenamingId(page.id);
       setRenameValue(page.name);
-      setActiveMenuPage(null);
+      setActiveMenu(null);
   };
 
   const saveRename = () => {
@@ -294,7 +330,7 @@ const PagesPanel = () => {
                                 onBlur={saveRename}
                                 onKeyDown={handleRenameKeyDown}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex-1 min-w-0 h-6 bg-background border border-primary/50 rounded-sm px-1 text-xs outline-none text-foreground"
+                                className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
                             />
                         ) : (
                             <span className="flex-1 truncate text-xs">{page.name}</span>
@@ -305,44 +341,61 @@ const PagesPanel = () => {
                         {/* Action Menu */}
                         {!isRenaming && (
                             <div 
-                                className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenuPage === page.id ? 'opacity-100' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActiveMenuPage(activeMenuPage === page.id ? null : page.id);
-                                }}
+                                className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenu?.id === page.id ? 'opacity-100' : ''}`}
+                                onClick={(e) => handleMenuOpen(e, page.id)}
                             >
                                 <MoreVertical size={12} className="text-muted-foreground hover:text-foreground" />
                             </div>
-                        )}
-
-                        {/* Context Menu */}
-                        {activeMenuPage === page.id && (
-                        <div 
-                            ref={menuRef}
-                            className="absolute right-2 top-6 w-32 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col py-1"
-                        >
-                            <button 
-                                onClick={(e) => startRenaming(page, e)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-muted w-full text-left transition-colors"
-                            >
-                                <Pencil size={12} /> Rename
-                            </button>
-                            <button 
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deletePage(page.id);
-                                    setActiveMenuPage(null);
-                                }}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-muted w-full text-left transition-colors"
-                            >
-                                <Trash2 size={12} /> Delete
-                            </button>
-                        </div>
                         )}
                     </div>
                 );
              })}
           </div>
+          
+          {/* Portal for Context Menu */}
+          {activeMenu && createPortal(
+            <div 
+                ref={menuRef}
+                className="fixed z-[9999] w-64 bg-popover border border-border rounded-lg shadow-xl overflow-hidden flex flex-col py-1 animate-in fade-in zoom-in-95 duration-100"
+                style={{ top: activeMenu.y, left: activeMenu.x }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {pages.find(p => p.id === activeMenu.id) && (
+                    <div className="flex flex-col py-1">
+                        {/* Rename */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => startRenaming(pages.find(p => p.id === activeMenu.id)!, e)} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
+                            >
+                                <Pencil size={14} className="opacity-70" /> Rename page
+                            </button>
+                        </div>
+
+                        {/* Duplicate */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => handleDuplicatePage(pages.find(p => p.id === activeMenu.id)!, e)} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
+                            >
+                                <Files size={14} className="opacity-70" /> Duplicate page
+                            </button>
+                        </div>
+
+                        {/* Delete */}
+                        <div className="px-1">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); deletePage(activeMenu.id); setActiveMenu(null); }} 
+                                className="flex items-center w-full px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-md transition-colors gap-2"
+                            >
+                                <Trash2 size={14} /> Delete page
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>,
+            document.body
+          )}
       </div>
 
       {/* 3. Resizer */}

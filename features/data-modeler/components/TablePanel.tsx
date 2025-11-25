@@ -1,8 +1,6 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files, Eye, GripVertical } from 'lucide-react';
+import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files, Eye } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
@@ -61,7 +59,10 @@ const SortableTableItem = ({
         transform,
         transition,
         isDragging
-    } = useSortable({ id: table.id, disabled: !!searchTerm });
+    } = useSortable({ 
+        id: table.id, 
+        disabled: !!searchTerm || isRenaming
+    });
 
     const style = {
         transform: CSS.Translate.toString(transform),
@@ -72,20 +73,19 @@ const SortableTableItem = ({
         <div 
             ref={setNodeRef}
             style={style}
-            onClick={() => onSelect(table.id)}
-            className={`relative px-4 py-2 flex items-center gap-2 text-sm cursor-pointer transition-colors group ${
+            {...attributes}
+            {...listeners}
+            onClick={() => {
+                if (!isRenaming) {
+                    onSelect(table.id);
+                }
+            }}
+            className={`relative px-4 py-2 flex items-center gap-2 text-sm cursor-pointer transition-colors group select-none outline-none ${
                 isActive 
                 ? 'bg-accent text-accent-foreground font-medium' 
                 : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
             } ${isDragging ? 'opacity-50 z-50 bg-muted' : ''}`}
         >
-             {/* Grip for Dragging */}
-             {!isRenaming && !searchTerm && (
-                <div {...attributes} {...listeners} className="opacity-0 group-hover:opacity-100 cursor-grab p-1 hover:bg-muted rounded -ml-2">
-                    <GripVertical size={12} className="text-muted-foreground" />
-                </div>
-            )}
-
             <div className="flex flex-col items-center justify-center pt-0.5">
                 {table.kind === 'view' ? (
                     <Eye size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
@@ -103,6 +103,7 @@ const SortableTableItem = ({
                     onBlur={saveRename}
                     onKeyDown={handleRenameKeyDown}
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                     className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
                 />
             ) : (
@@ -114,7 +115,8 @@ const SortableTableItem = ({
             {/* Action Menu Button */}
             {!isRenaming && (
                 <div 
-                    className={`rounded opacity-0 group-hover:opacity-100 transition-opacity`}
+                    className={`rounded opacity-0 group-hover:opacity-100 transition-opacity ml-auto`}
+                    onPointerDown={(e) => e.stopPropagation()} // Prevent drag
                     onClick={(e) => onMenuOpen(e, table.id)}
                 >
                     <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -143,11 +145,11 @@ const TablePanel: React.FC = () => {
 
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // DnD Sensors
+  // DnD Sensors - Smart Activation
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-            distance: 5,
+            distance: 8, // Require 8px movement to start drag
         },
     })
   );

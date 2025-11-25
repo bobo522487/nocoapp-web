@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
@@ -27,8 +25,7 @@ import {
     Copy,
     FolderPlus,
     Folder,
-    FolderOpen,
-    GripVertical
+    FolderOpen
 } from 'lucide-react';
 import ComponentsPanel from './ComponentsPanel';
 import { Button } from "../../../components/ui/button";
@@ -45,9 +42,7 @@ import {
     defaultDropAnimationSideEffects, 
     DropAnimation,
     DragStartEvent,
-    DragMoveEvent,
-    DragEndEvent,
-    DragOverEvent
+    DragEndEvent
 } from '@dnd-kit/core';
 import { 
     SortableContext, 
@@ -93,7 +88,11 @@ const SortablePageItem = ({
         transform,
         transition,
         isDragging
-    } = useSortable({ id: page.id, data: { type: 'PAGE', page, depth } });
+    } = useSortable({ 
+        id: page.id, 
+        data: { type: 'PAGE', page, depth },
+        disabled: isRenaming
+    });
 
     const style = {
         transform: CSS.Translate.toString(transform),
@@ -124,8 +123,14 @@ const SortablePageItem = ({
         <div 
             ref={setNodeRef}
             style={style}
-            onClick={() => !isRenaming && onSelect(page)}
-            className={`relative pr-2 py-2 flex items-center text-sm cursor-pointer transition-colors group ${
+            {...attributes}
+            {...listeners}
+            onClick={(e) => {
+                if (!isRenaming) {
+                    onSelect(page);
+                }
+            }}
+            className={`relative pr-2 py-2 flex items-center text-sm cursor-pointer transition-colors group select-none outline-none ${
                 isActive 
                 ? 'bg-accent text-accent-foreground font-medium' 
                 : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -133,7 +138,8 @@ const SortablePageItem = ({
         >
             {/* Folder Toggle */}
             <span 
-                className="mr-1 opacity-70 w-4 h-4 flex items-center justify-center cursor-pointer"
+                className="mr-1 opacity-70 w-4 h-4 flex items-center justify-center cursor-pointer z-10"
+                onPointerDown={(e) => e.stopPropagation()} // Prevent drag start on toggle
                 onClick={(e) => {
                     e.stopPropagation();
                     if (page.type === 'folder') onToggleFolder(page.id);
@@ -161,6 +167,7 @@ const SortablePageItem = ({
                         e.stopPropagation();
                     }}
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                     className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
                 />
             ) : (
@@ -169,14 +176,12 @@ const SortablePageItem = ({
 
             {!isRenaming && page.isHome && <Home size={10} className="text-muted-foreground mr-1" />}
             
-            {/* Drag Handle & Menu */}
+            {/* Action Menu Button */}
             {!isRenaming && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div {...attributes} {...listeners} className="cursor-grab p-1 hover:bg-muted rounded">
-                        <GripVertical size={12} />
-                    </div>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
                     <div 
                         className={`p-1 hover:bg-muted rounded ${isActive ? 'opacity-100' : ''}`}
+                        onPointerDown={(e) => e.stopPropagation()} // Prevent drag start on menu
                         onClick={(e) => onMenuOpen(e, page.id)}
                     >
                          <MoreVertical size={14} />
@@ -218,11 +223,11 @@ const PagesPanel = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const splitterRef = useRef<HTMLDivElement>(null);
 
-  // DnD Sensors
+  // DnD Sensors - Smart Activation
   const sensors = useSensors(
     useSensor(PointerSensor, {
         activationConstraint: {
-            distance: 5,
+            distance: 8, // Require 8px movement to start drag, preventing accidental drags on click
         },
     })
   );
@@ -243,14 +248,11 @@ const PagesPanel = () => {
 
   // --- Helpers to Flatten Tree ---
   const flattenedPages = useMemo(() => {
-    // 1. Reconstruct Tree Structure from flat pages based on parentId
-    // Ensure pages array order determines sibling order
     const rootNodes: Page[] = [];
     const childrenMap: Record<string, Page[]> = {};
     
     pages.forEach(p => childrenMap[p.id] = []);
 
-    // We assume the pages array in store is already sorted in pre-order traversal or insertion order
     pages.forEach(p => {
         if (p.parentId) {
             if (!childrenMap[p.parentId]) childrenMap[p.parentId] = [];
@@ -260,7 +262,6 @@ const PagesPanel = () => {
         }
     });
 
-    // 2. Flatten for display (respecting isOpen)
     const flattened: { id: string; depth: number; page: Page }[] = [];
     
     function traverse(nodes: Page[], depth: number) {
@@ -341,28 +342,15 @@ const PagesPanel = () => {
 
     if (!over) return;
     
-    // Calculate new state
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Find indices in visible list
     const activeIndex = flattenedPages.findIndex(i => i.id === activeId);
     const overIndex = flattenedPages.findIndex(i => i.id === overId);
-
-    // Calculate projected depth
     const currentItem = flattenedPages[activeIndex];
-    const overItem = flattenedPages[overIndex];
     
-    // Simple Reordering logic + Parent Change
-    // We construct a new ordered list of pages.
-    // 1. Remove active item from its current place in global pages list?
-    // Not easy because global list is flat.
-    
-    // Easier: Update the parentId and reorder the array based on the flat projection.
-    
-    // Logic:
-    // 1. If dropping on same item, do nothing.
-    // 2. Identify new parent based on drop position.
+    // Projected depth based on drag offset (each level is 12px indentation)
+    const projectedDepth = currentItem.depth + Math.round(delta.x / 12);
     
     const newPages = [...pages];
     const activePage = newPages.find(p => p.id === activeId);
@@ -373,73 +361,35 @@ const PagesPanel = () => {
     newPages.splice(oldIndex, 1);
 
     // Calculate insertion index
-    // We need to find where `overId` is in the `newPages` array to insert near it.
     let newIndex = newPages.findIndex(p => p.id === overId);
     
-    // Adjust based on direction
     if (activeIndex < overIndex) {
         newIndex += 1; // Moving down, insert after
     }
     
-    // Indentation Logic (Depth Change)
-    // Projected depth based on drag offset
-    const projectedDepth = currentItem.depth + Math.round(delta.x / 20);
-    
-    // Calculate constraints for depth
-    // We look at the item *before* the insertion point to determine valid parents.
-    // The item at `newIndex - 1` in `newPages` (after splice) is the potential parent or sibling.
-    
     let newParentId: string | undefined = undefined;
 
-    // Special Case: Dropping ON a folder to move inside (if we detect it)
-    // dnd-kit Sortable doesn't distinguish "on top" vs "between" easily without collisions.
-    // We use indentation to imply hierarchy.
-    
     if (newIndex > 0) {
         const prevItem = newPages[newIndex - 1];
+        const prevItemFlat = flattenedPages.find(f => f.id === prevItem.id);
+        const prevItemDepth = prevItemFlat?.depth ?? 0;
         
-        // Allowed depth: [0, prevItemDepth + 1] (if folder) or [0, prevItemDepth] (if file)
-        // Actually, we can nesting deeper only if prevItem is a folder or already has children?
-        // Let's assume standard tree rules: can become child of prevItem if prevItem is folder.
-        // Can become sibling of prevItem.
-        // Can become sibling of prevItem's parent (outdent).
-        
-        // Calculate depth of prevItem
-        const prevItemDepth = flattenedPages.find(f => f.id === prevItem.id)?.depth ?? 0;
-        
+        // Logic to determine nesting based on drag position and previous item
         if (prevItem.type === 'folder' && projectedDepth > prevItemDepth) {
             // Indent: Make child of prevItem
             newParentId = prevItem.id;
-            // Ensure folder opens if we drop inside
             prevItem.isOpen = true; 
         } else {
-             // Sibling or Outdent
-             // If projectedDepth == prevItemDepth, sibling -> same parent
-             // If projectedDepth < prevItemDepth, outdent -> move up parents
+             // Keep same parent as prevItem (sibling) or outdent (grandparent)
+             // For simple logic, we default to prevItem's parent
+             // Ideally we check if projectedDepth matches prevItemDepth or less
+             // But without full tree reconstruction in drag end, we stick to:
+             // 1. If dragging right significantly -> Nest
+             // 2. Otherwise -> Sibling of where it landed
              
-             // Find parent at projected depth
-             // We trace back up from prevItem
-             
-             let candidate = prevItem;
-             let candidateDepth = prevItemDepth;
-             
-             // Traverse up parents until we find one that matches projectedDepth or hit root
-             // This requires building parent map, which we can do on fly or use existing structure
-             // Easier: just set parentId to match prevItem's parentId, unless we are outdenting
-             
-             if (projectedDepth === prevItemDepth) {
-                 newParentId = prevItem.parentId;
-             } else if (projectedDepth < prevItemDepth) {
-                 // Outdent: Find ancestor
-                 // We need to look up ancestors.
-                 // A quick way: find prevItem in flattened list, verify its parent.
-                 // We don't have direct access to depth in `newPages` easily without re-flattening.
-                 
-                 // Fallback: simple sibling move for now to avoid complex tree math bugs in one-shot code.
-                 // If user moves left significantly, we try to set parent to prevItem.parent.parent...
-                 
-                 // SIMPLE LOGIC:
-                 // Just set parent to prevItem.parentId.
+             if (projectedDepth < prevItemDepth) {
+                 // Try to outdent? Requires finding grandparent.
+                 // For now, simple reorder
                  newParentId = prevItem.parentId;
              } else {
                  newParentId = prevItem.parentId;
@@ -449,13 +399,9 @@ const PagesPanel = () => {
         newParentId = undefined; // First item is always root
     }
 
-    // Update the active page
     activePage.parentId = newParentId;
-
-    // Insert at new index
     newPages.splice(newIndex, 0, activePage);
 
-    // Commit
     reorderPages(newPages);
   };
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks, Palette, Check, Triangle, Database, MessageSquare, Code, LogOut, User } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
@@ -17,7 +18,7 @@ const Header: React.FC = () => {
   const profileButtonRef = useRef<HTMLDivElement>(null);
 
   const themes: { id: AppTheme; label: string; icon: any }[] = [
-    { id: 'vercel', label: 'Vercel (Default)', icon: Triangle },
+    { id: 'vercel', label: 'Vercel', icon: Triangle },
     { id: 'supabase', label: 'Supabase', icon: Database },
     { id: 'slack', label: 'Slack', icon: MessageSquare },
     { id: 'vscode', label: 'VS Code', icon: Code },

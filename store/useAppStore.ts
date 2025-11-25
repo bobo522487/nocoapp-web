@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { ViewMode, Page, GridItemData, DbTable } from '../types';
 
@@ -71,7 +72,7 @@ const INITIAL_PAGE_LAYOUTS: Record<string, Record<string, GridItemData[]>> = {
 
 export const useAppStore = create<AppState>((set) => ({
   isDarkMode: true,
-  theme: 'vercel',
+  theme: 'vscode',
   activeView: ViewMode.HOME,
   activeDevice: 'desktop',
   toggleTheme: () => set((state) => ({ isDarkMode: !state.isDarkMode })),

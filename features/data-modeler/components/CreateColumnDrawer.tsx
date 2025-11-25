@@ -46,7 +46,7 @@ const CreateColumnDrawer: React.FC<CreateColumnDrawerProps> = ({
     onClose, 
     onCreate, 
     tables, 
-    activeTableName,
+    activeTableName, 
     getTargetColumns 
 }) => {
   const [isMounted, setIsMounted] = useState(false);

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Canvas from './Canvas';
 import PropertyPanel from './PropertyPanel';
@@ -74,14 +75,14 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice }) => {
 
         {/* Right: Main Actions */}
         <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-ide-hover rounded-md transition-colors">
-                <Save size={14} /> Save
+            <button className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-ide-hover rounded-md transition-colors" title="Save">
+                <Save size={14} />
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-ide-hover rounded-md transition-colors">
-                <Play size={14} /> Preview
+            <button className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-ide-hover rounded-md transition-colors" title="Preview">
+                <Play size={14} />
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm">
-                <Rocket size={14} /> Publish
+            <button className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm" title="Publish">
+                <Rocket size={14} />
             </button>
         </div>
     </div>

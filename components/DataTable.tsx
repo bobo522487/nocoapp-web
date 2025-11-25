@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Table,
@@ -20,7 +21,7 @@ export interface ColumnDef<T> {
   flex?: boolean;
   editable?: boolean;
   type?: 'text' | 'number' | 'select';
-  options?: any[]; // Supports strings or rich objects
+  options?: any[]; // Supports strings or rich objects {id, label, icon}
   renderCell?: (row: T, value: any) => React.ReactNode;
   className?: string;
 }
@@ -96,8 +97,6 @@ const DataTable = <T extends { [key: string]: any }>({
 
   const handleSelectRow = (id: string | number, checked: boolean | 'indeterminate') => {
     if (!onSelectionChange) return;
-    
-    // Logic: if checked is true and not selected, add. If checked is false and selected, remove.
     const isSelected = selectedIds.includes(id);
     
     if (checked === true && !isSelected) {
@@ -196,7 +195,7 @@ const DataTable = <T extends { [key: string]: any }>({
                                             setEditingCell(null);
                                         }
                                     }}
-                                    className="w-full h-full border-2 border-primary rounded-none px-2 bg-background"
+                                    className="w-full h-full border-2 border-primary rounded-none px-2 bg-background flex items-center"
                                     width={200}
                                 />
                             </div>

@@ -90,17 +90,17 @@ const AppToolbar: React.FC<AppToolbarProps> = ({ device, setDevice, onClearCanva
                     <Redo2 size={16} />
                 </Button>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClearCanvas} className="gap-2 h-8 text-muted-foreground hover:text-destructive transition-colors">
-                <Trash2 size={14} /> Clear
+            <Button variant="ghost" size="icon" onClick={onClearCanvas} className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors" title="Clear">
+                <Trash2 size={16} />
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2 h-8 text-muted-foreground">
-                <Save size={14} /> Save
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" title="Save">
+                <Save size={16} />
             </Button>
-            <Button variant="outline" size="sm" className="gap-2 h-8">
-                <Play size={14} /> Preview
+            <Button variant="outline" size="icon" className="h-8 w-8" title="Preview">
+                <Play size={16} />
             </Button>
-            <Button variant="default" size="sm" className="gap-2 h-8">
-                <Rocket size={14} /> Publish
+            <Button variant="default" size="icon" className="h-8 w-8" title="Publish">
+                <Rocket size={16} />
             </Button>
         </div>
     </div>

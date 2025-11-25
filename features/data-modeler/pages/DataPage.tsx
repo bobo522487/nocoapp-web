@@ -132,11 +132,13 @@ const DataPage: React.FC = () => {
 
   useEffect(() => {
     // Load data based on activeTableId
-    const data = MOCK_DB[activeTableId] || MOCK_DB['users'];
+    const data = MOCK_DB[activeTableId];
     
     // Fallback if table ID doesn't match mock keys (e.g. new table)
     if (!data) {
-        setSchema([]);
+        setSchema([
+             { id: 'id', name: 'ID', type: 'serial', width: 60, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' }
+        ]);
         setRecords([]);
     } else {
         setSchema(data.schema);
@@ -311,7 +313,7 @@ const DataPage: React.FC = () => {
           minWidth: 150,
           editable: true,
           renderCell: (row) => (
-              <div className="flex items-center gap-2 font-medium text-foreground pl-1">
+              <div className="flex items-center gap-2 font-medium text-foreground pl-1 h-full">
                   {row.name}
                   {row.isPrimary && <FileKey size={12} className="text-yellow-500 ml-1" />}
               </div>

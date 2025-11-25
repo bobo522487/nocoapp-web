@@ -10,6 +10,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Switch } from "../../../components/ui/switch";
 import { Checkbox } from "../../../components/ui/checkbox";
 import ForeignKeyDrawer, { ForeignKeyConfig } from '../components/ForeignKeyDrawer';
+import CreateColumnDrawer from '../components/CreateColumnDrawer';
 
 // --- Configuration ---
 const TYPE_CONFIG: Record<string, { pk: boolean; fk: boolean; unique: boolean; notNull: boolean }> = {
@@ -99,8 +100,9 @@ const DataPage: React.FC = () => {
   const [schema, setSchema] = useState<SchemaField[]>([]);
   const [records, setRecords] = useState<any[]>([]);
 
-  // Foreign Key Drawer State
+  // Drawers State
   const [isForeignKeyDrawerOpen, setIsForeignKeyDrawerOpen] = useState(false);
+  const [isCreateColumnDrawerOpen, setIsCreateColumnDrawerOpen] = useState(false);
   const [currentForeignKeyField, setCurrentForeignKeyField] = useState<SchemaField | null>(null);
 
   useEffect(() => {
@@ -119,6 +121,7 @@ const DataPage: React.FC = () => {
     // Reset view mode on table switch
     setViewMode('MODEL');
     setIsForeignKeyDrawerOpen(false);
+    setIsCreateColumnDrawerOpen(false);
   }, [activeTableId]);
 
   // --- Handlers for DataGrid Actions ---
@@ -191,21 +194,40 @@ const DataPage: React.FC = () => {
       return tableData.schema.map(f => ({ id: f.id, name: f.name }));
   };
 
-  const handleSchemaAdd = () => {
+  const handleSchemaAddClick = () => {
+      setIsCreateColumnDrawerOpen(true);
+  };
+
+  const handleColumnCreate = (fieldConfig: Partial<SchemaField> & { targetTableId?: string, foreignKeyConfig?: ForeignKeyConfig }) => {
+      // Determine Icon
+      let icon = Type;
+      switch(fieldConfig.type) {
+        case 'serial': icon = FileKey; break;
+        case 'int': 
+        case 'bigint': icon = Hash; break;
+        case 'float': icon = DollarSign; break;
+        case 'boolean': icon = ToggleLeft; break;
+        case 'date with time': icon = Calendar; break;
+        case 'jsonb': icon = Braces; break;
+      }
+
       const newField: SchemaField = {
           id: `col_${Date.now()}`,
-          name: 'New Column',
-          type: 'varchar',
-          defaultValue: '',
-          isPrimary: false,
-          isForeignKey: false,
-          isUnique: false,
-          isNullable: true,
-          description: 'New field description',
+          name: fieldConfig.name || 'New Column',
+          type: fieldConfig.type || 'varchar',
+          defaultValue: fieldConfig.defaultValue || '',
+          isPrimary: fieldConfig.isPrimary || false,
+          isForeignKey: fieldConfig.isForeignKey || false,
+          isUnique: fieldConfig.isUnique || false,
+          isNullable: fieldConfig.isNullable !== undefined ? fieldConfig.isNullable : true,
+          description: '',
           flex: true,
-          icon: Type
+          icon: icon,
+          width: 150
       };
+
       setSchema([...schema, newField]);
+      // Note: We don't need to open the FK drawer here anymore because it was configured inside the CreateColumnDrawer
   };
 
   const handleSchemaDelete = (ids: (string | number)[]) => {
@@ -421,7 +443,7 @@ const DataPage: React.FC = () => {
             title={`${title} (Model)`}
             columns={modelColumns}
             data={schema}
-            onAdd={handleSchemaAdd}
+            onAdd={handleSchemaAddClick}
             onEdit={handleSchemaChange}
             onDelete={handleSchemaDelete}
             keyField="id"
@@ -450,6 +472,15 @@ const DataPage: React.FC = () => {
             onDelete={handleFKDrawerDelete}
         />
       )}
+
+      <CreateColumnDrawer
+        isOpen={isCreateColumnDrawerOpen}
+        onClose={() => setIsCreateColumnDrawerOpen(false)}
+        onCreate={handleColumnCreate}
+        tables={tables}
+        activeTableName={currentTable?.name || activeTableId}
+        getTargetColumns={getTargetColumns}
+      />
     </div>
   );
 };

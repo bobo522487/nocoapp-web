@@ -15,6 +15,7 @@ interface ForeignKeyDrawerProps {
   getTargetColumns: (tableId: string) => { id: string; name: string }[];
   onSave: (config: ForeignKeyConfig) => void;
   onDelete: () => void;
+  baseZIndex?: number;
 }
 
 export interface ForeignKeyConfig {
@@ -32,7 +33,8 @@ const ForeignKeyDrawer: React.FC<ForeignKeyDrawerProps> = ({
   tables,
   getTargetColumns,
   onSave,
-  onDelete
+  onDelete,
+  baseZIndex = 60
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [config, setConfig] = useState<ForeignKeyConfig>({
@@ -84,17 +86,19 @@ const ForeignKeyDrawer: React.FC<ForeignKeyDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-black/20 backdrop-blur-sm z-[60] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{ zIndex: baseZIndex }}
         onClick={onClose}
       />
       
       {/* Drawer */}
       <div 
-        className={`fixed inset-y-0 right-0 w-[560px] bg-background shadow-2xl transform transition-transform duration-300 z-[70] flex flex-col border-l border-border ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 w-[560px] bg-background shadow-2xl transform transition-transform duration-300 flex flex-col border-l border-border ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        style={{ zIndex: baseZIndex + 10 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-            <h3 className="text-lg font-semibold text-foreground">Edit foreign key relation</h3>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
+            <h3 className="text-xl font-semibold text-foreground tracking-tight">Edit foreign key relation</h3>
             <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 rounded-full">
                 <X size={18} />
             </Button>
@@ -139,7 +143,7 @@ const ForeignKeyDrawer: React.FC<ForeignKeyDrawerProps> = ({
                         <span className="text-sm font-medium text-muted-foreground w-24">Column</span>
                         <div className="flex-1">
                             <div className="w-full border border-input bg-muted/50 text-muted-foreground rounded-md px-3 py-2 text-sm flex justify-between items-center cursor-not-allowed">
-                                <span>{sourceColumnName}</span>
+                                <span>{sourceColumnName || 'New Column'}</span>
                                 <ChevronDown size={14} className="opacity-50" />
                             </div>
                         </div>

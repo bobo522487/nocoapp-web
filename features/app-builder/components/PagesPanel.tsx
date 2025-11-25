@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
     Plus, 
@@ -20,8 +22,12 @@ import {
     TextCursor,
     FileText,
     ChevronDown,
+    ChevronRight,
     Eye,
-    Files
+    Copy,
+    FolderPlus,
+    Folder,
+    FolderOpen
 } from 'lucide-react';
 import ComponentsPanel from './ComponentsPanel';
 import { Button } from "../../../components/ui/button";
@@ -38,6 +44,7 @@ const PagesPanel = () => {
       addPage, 
       deletePage, 
       updatePage,
+      togglePageFolder,
       pageLayouts, 
       selectedComponentId, 
       setSelectedComponentId,
@@ -157,6 +164,7 @@ const PagesPanel = () => {
       const newPage: Page = {
           id: newId,
           name: 'New Page',
+          type: 'page',
           icon: 'File',
           isHome: false,
           isHidden: false,
@@ -165,6 +173,22 @@ const PagesPanel = () => {
       };
       addPage(newPage);
       navigate(`/apps/${appId || 'default-app'}/pages/${newId}`);
+  };
+
+  const handleAddGroup = () => {
+      const newId = `group-${Date.now()}`;
+      const newGroup: Page = {
+          id: newId,
+          name: 'New Group',
+          type: 'folder',
+          isOpen: true,
+          icon: 'Folder',
+          isHome: false,
+          isHidden: false,
+          isDisabled: false,
+          height: '0'
+      };
+      addPage(newGroup);
   };
 
   const handleDuplicatePage = (page: Page, e: React.MouseEvent) => {
@@ -180,9 +204,14 @@ const PagesPanel = () => {
       setActiveMenu(null);
   };
 
-  const handlePageClick = (pageId: string) => {
-      if (renamingId === pageId) return; // Don't navigate while renaming
-      navigate(`/apps/${appId || 'default-app'}/pages/${pageId}`);
+  const handleItemClick = (page: Page) => {
+      if (renamingId === page.id) return; 
+
+      if (page.type === 'folder') {
+          togglePageFolder(page.id);
+      } else {
+          navigate(`/apps/${appId || 'default-app'}/pages/${page.id}`);
+      }
   };
 
   const startRenaming = (page: Page, e: React.MouseEvent) => {
@@ -214,8 +243,14 @@ const PagesPanel = () => {
       e.stopPropagation();
   };
 
-  const getPageIcon = (iconName: string) => {
-      switch(iconName) {
+  const getPageIcon = (page: Page) => {
+      if (page.type === 'folder') {
+          return page.isOpen 
+            ? <FolderOpen size={14} className="mr-2 text-yellow-500" /> 
+            : <Folder size={14} className="mr-2 text-yellow-500" />;
+      }
+
+      switch(page.icon) {
           case 'LayoutGrid': return <LayoutGrid size={14} className="mr-2" />;
           case 'ShoppingCart': return <ShoppingCart size={14} className="mr-2" />;
           case 'Settings': return <Settings size={14} className="mr-2" />;
@@ -266,6 +301,90 @@ const PagesPanel = () => {
       }
   };
 
+  // Build tree from flat pages list
+  const pageTree = useMemo(() => {
+    const root: (Page & { children: any[] })[] = [];
+    const lookup: Record<string, Page & { children: any[] }> = {};
+    
+    // Create map
+    pages.forEach(p => {
+        lookup[p.id] = { ...p, children: [] };
+    });
+
+    // Link children
+    pages.forEach(p => {
+        if (p.parentId && lookup[p.parentId]) {
+            lookup[p.parentId].children.push(lookup[p.id]);
+        } else {
+            root.push(lookup[p.id]);
+        }
+    });
+    
+    return root;
+  }, [pages]);
+
+  const renderPageItem = (page: Page & { children?: any[] }, depth: number = 0) => {
+      const isActive = page.id === activePageId;
+      const isRenaming = renamingId === page.id;
+      const paddingLeft = depth * 12 + 12;
+
+      return (
+          <div key={page.id}>
+              <div 
+                  onClick={() => handleItemClick(page)}
+                  className={`relative pr-2 py-1.5 flex items-center text-sm cursor-pointer transition-colors rounded-sm group mb-0.5 ${
+                      isActive ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                  style={{ paddingLeft: `${paddingLeft}px` }}
+              >
+                  {page.type === 'folder' && (
+                       <span className="mr-1 opacity-70">
+                            {page.isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                       </span>
+                  )}
+                  
+                  <div className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors flex items-center`}>
+                      {getPageIcon(page)}
+                  </div>
+                  
+                  {isRenaming ? (
+                      <input
+                          ref={renameInputRef}
+                          type="text"
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={saveRename}
+                          onKeyDown={handleRenameKeyDown}
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
+                      />
+                  ) : (
+                      <span className="flex-1 truncate text-xs">{page.name}</span>
+                  )}
+
+                  {!isRenaming && page.isHome && <Home size={10} className="text-muted-foreground mr-1" />}
+                  
+                  {/* Action Menu */}
+                  {!isRenaming && (
+                      <div 
+                          className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenu?.id === page.id ? 'opacity-100' : ''}`}
+                          onClick={(e) => handleMenuOpen(e, page.id)}
+                      >
+                          <MoreVertical size={12} className="text-muted-foreground hover:text-foreground" />
+                      </div>
+                  )}
+              </div>
+              
+              {/* Recursive Children */}
+              {page.type === 'folder' && page.isOpen && page.children && page.children.length > 0 && (
+                  <div>
+                      {page.children.map(child => renderPageItem(child, depth + 1))}
+                  </div>
+              )}
+          </div>
+      );
+  };
+
   if (showComponents) {
     return (
         <div ref={panelRef} className="h-full">
@@ -297,59 +416,18 @@ const PagesPanel = () => {
           <div className="h-9 px-4 flex justify-between items-center shrink-0 bg-muted/10">
             <span className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Pages</span>
             <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleAddPage}>
-                    <Plus size={12} className="text-muted-foreground hover:text-foreground"/>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAddGroup} title="New Group">
+                    <FolderPlus size={14} className="text-muted-foreground hover:text-foreground"/>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleAddPage} title="New Page">
+                    <Plus size={14} className="text-muted-foreground hover:text-foreground"/>
                 </Button>
             </div>
           </div>
 
           {/* List */}
           <div className="flex-1 overflow-y-auto p-1">
-             {pages.map(page => {
-                const isActive = page.id === activePageId;
-                const isRenaming = renamingId === page.id;
-
-                return (
-                    <div 
-                        key={page.id} 
-                        onClick={() => handlePageClick(page.id)}
-                        className={`relative px-3 py-1.5 flex items-center text-sm cursor-pointer transition-colors rounded-sm group mb-0.5 ${
-                            isActive ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        }`}
-                    >
-                        <div className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors flex items-center`}>
-                           {getPageIcon(page.icon)}
-                        </div>
-                        
-                        {isRenaming ? (
-                            <input
-                                ref={renameInputRef}
-                                type="text"
-                                value={renameValue}
-                                onChange={(e) => setRenameValue(e.target.value)}
-                                onBlur={saveRename}
-                                onKeyDown={handleRenameKeyDown}
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
-                            />
-                        ) : (
-                            <span className="flex-1 truncate text-xs">{page.name}</span>
-                        )}
-
-                        {!isRenaming && page.isHome && <Home size={10} className="text-muted-foreground mr-1" />}
-                        
-                        {/* Action Menu */}
-                        {!isRenaming && (
-                            <div 
-                                className={`opacity-0 group-hover:opacity-100 transition-opacity ${activeMenu?.id === page.id ? 'opacity-100' : ''}`}
-                                onClick={(e) => handleMenuOpen(e, page.id)}
-                            >
-                                <MoreVertical size={12} className="text-muted-foreground hover:text-foreground" />
-                            </div>
-                        )}
-                    </div>
-                );
-             })}
+             {pageTree.map(node => renderPageItem(node))}
           </div>
           
           {/* Portal for Context Menu */}
@@ -368,17 +446,17 @@ const PagesPanel = () => {
                                 onClick={(e) => startRenaming(pages.find(p => p.id === activeMenu.id)!, e)} 
                                 className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
                             >
-                                <Pencil size={14} className="opacity-70" /> Rename page
+                                <Pencil size={14} className="opacity-70" /> Rename
                             </button>
                         </div>
 
-                        {/* Duplicate */}
+                        {/* Duplicate (only for pages usually, but we can allow folder duplications logic later if needed) */}
                         <div className="px-1">
                             <button 
                                 onClick={(e) => handleDuplicatePage(pages.find(p => p.id === activeMenu.id)!, e)} 
                                 className="flex items-center w-full px-2 py-1.5 text-xs text-foreground hover:bg-muted rounded-md transition-colors gap-2"
                             >
-                                <Files size={14} className="opacity-70" /> Duplicate page
+                                <Copy size={14} className="opacity-70" /> Duplicate
                             </button>
                         </div>
 
@@ -388,7 +466,7 @@ const PagesPanel = () => {
                                 onClick={(e) => { e.stopPropagation(); deletePage(activeMenu.id); setActiveMenu(null); }} 
                                 className="flex items-center w-full px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 rounded-md transition-colors gap-2"
                             >
-                                <Trash2 size={14} /> Delete page
+                                <Trash2 size={14} /> Delete
                             </button>
                         </div>
                     </div>

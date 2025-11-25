@@ -1,4 +1,5 @@
 
+
 import { create } from 'zustand';
 import { ViewMode, Page, GridItemData, DbTable } from '../types';
 
@@ -23,6 +24,7 @@ interface AppState {
   updatePage: (id: string, updates: Partial<Page>) => void;
   addPage: (page: Page) => void;
   deletePage: (id: string) => void;
+  togglePageFolder: (id: string) => void;
 
   // Data State
   tables: DbTable[];
@@ -43,9 +45,9 @@ interface AppState {
 }
 
 const INITIAL_PAGES: Page[] = [
-  { id: 'page-1', name: 'Dashboard', icon: 'LayoutGrid', isHome: true, isHidden: false, isDisabled: false, height: '800' },
-  { id: 'page-2', name: 'Orders', icon: 'ShoppingCart', isHome: false, isHidden: false, isDisabled: false, height: '1000' },
-  { id: 'page-3', name: 'Settings', icon: 'Settings', isHome: false, isHidden: false, isDisabled: false, height: '600' },
+  { id: 'page-1', name: 'Dashboard', type: 'page', icon: 'LayoutGrid', isHome: true, isHidden: false, isDisabled: false, height: '800' },
+  { id: 'page-2', name: 'Orders', type: 'page', icon: 'ShoppingCart', isHome: false, isHidden: false, isDisabled: false, height: '1000' },
+  { id: 'page-3', name: 'Settings', type: 'page', icon: 'Settings', isHome: false, isHidden: false, isDisabled: false, height: '600' },
 ];
 
 const INITIAL_TABLES: DbTable[] = [
@@ -89,7 +91,7 @@ export const useAppStore = create<AppState>((set) => ({
   })),
   addPage: (page) => set((state) => ({ 
     pages: [...state.pages, page],
-    activePageId: page.id,
+    activePageId: page.type === 'page' ? page.id : state.activePageId,
     pageLayouts: {
         ...state.pageLayouts,
         [page.id]: { lg: [] } // Initialize empty layout for new page
@@ -99,13 +101,16 @@ export const useAppStore = create<AppState>((set) => ({
     // Remove layout data for deleted page
     const { [id]: removed, ...remainingLayouts } = state.pageLayouts;
     return { 
-        pages: state.pages.filter(p => p.id !== id),
+        pages: state.pages.filter(p => p.id !== id && p.parentId !== id), // Also remove children if it's a folder? For now simple delete.
         activePageId: state.activePageId === id && state.pages.length > 1 
-            ? state.pages.find(p => p.id !== id)?.id || ''
+            ? state.pages.find(p => p.id !== id && p.type === 'page')?.id || ''
             : state.activePageId,
         pageLayouts: remainingLayouts
     };
   }),
+  togglePageFolder: (id) => set((state) => ({
+    pages: state.pages.map(p => p.id === id ? { ...p, isOpen: !p.isOpen } : p)
+  })),
 
   // Data State
   tables: INITIAL_TABLES,

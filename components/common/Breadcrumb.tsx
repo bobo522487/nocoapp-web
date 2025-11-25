@@ -1,11 +1,12 @@
+
 import React, { useState } from 'react';
 import Dropdown from './Dropdown';
-import { LayoutGrid, Database, Table, Plus, Box, File } from 'lucide-react';
+import { LayoutGrid, Database, Table, Plus, Box, File, Eye } from 'lucide-react';
 import { ViewMode } from '../../types';
 import { useAppStore } from '../../store/useAppStore';
 
 const Breadcrumb: React.FC = () => {
-  const { activeView, pages, activePageId, setActivePageId, activeTableId, setActiveTableId } = useAppStore();
+  const { activeView, pages, activePageId, setActivePageId, activeTableId, setActiveTableId, tables } = useAppStore();
 
   // --- State ---
   const [selectedOrg, setSelectedOrg] = useState({ id: 'org-1', label: "bobo's Org" });
@@ -31,13 +32,6 @@ const Breadcrumb: React.FC = () => {
     { id: 'src-2', label: "production-db", group: 'Databases', icon: Database },
   ];
   
-  const tables = [
-    { id: 'users', label: "users", group: 'Public', icon: Table },
-    { id: 'orders', label: "orders", group: 'Public', icon: Table },
-    { id: 'products', label: "products", group: 'Public', icon: Table },
-    { id: 'inventory_logs', label: "inventory_logs", group: 'Public', icon: Table },
-  ];
-
   // App Context
   const apps = [
     { id: 'app-1', label: "Order App", group: 'Apps', icon: LayoutGrid },
@@ -55,6 +49,12 @@ const Breadcrumb: React.FC = () => {
   }));
 
   const activeTableItem = tables.find(t => t.id === activeTableId);
+  const tableItems = tables.map(t => ({
+      id: t.id,
+      label: t.name,
+      group: t.kind === 'view' ? 'Views' : 'Tables',
+      icon: t.kind === 'view' ? Eye : Table
+  }));
 
   const Separator = () => (
     <span className="text-muted-foreground/40 mx-1 text-lg font-light">/</span>
@@ -142,9 +142,9 @@ const Breadcrumb: React.FC = () => {
                 />
                 <Separator />
                 <Dropdown
-                    triggerLabel={activeTableItem?.label || activeTableId}
-                    triggerIcon={Table}
-                    items={tables}
+                    triggerLabel={activeTableItem?.name || activeTableId}
+                    triggerIcon={activeTableItem?.kind === 'view' ? Eye : Table}
+                    items={tableItems}
                     selectedId={activeTableId}
                     onSelect={(item) => setActiveTableId(item.id)}
                     searchPlaceholder="Find table..."

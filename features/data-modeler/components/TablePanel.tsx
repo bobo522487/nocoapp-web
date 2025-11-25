@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files } from 'lucide-react';
+import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Files, Eye } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
@@ -11,6 +12,8 @@ const TablePanel: React.FC = () => {
   const navigate = useNavigate();
   const { tables, activeTableId, addTable, updateTable, deleteTable } = useAppStore();
   
+  const [searchTerm, setSearchTerm] = useState('');
+
   // State for Menu Position and Active Item
   const [activeMenu, setActiveMenu] = useState<{ id: string; x: number; y: number } | null>(null);
   
@@ -74,16 +77,31 @@ const TablePanel: React.FC = () => {
   };
 
   const handleAddTable = () => {
-      const newId = `table_${Date.now()}`;
-      addTable({ id: newId, name: 'New Table' });
+      const timestamp = Date.now();
+      const newId = `table_${timestamp}`;
+      addTable({ 
+          id: newId, 
+          name: 'New Table', 
+          code: `new_table_${timestamp}`,
+          kind: 'table'
+      });
       navigate(`/data/${newId}`);
   };
   
   const handleDuplicateTable = (table: DbTable, e: React.MouseEvent) => {
       e.stopPropagation();
+      const timestamp = Date.now();
       const newId = `${table.id}_copy_${Math.floor(Math.random() * 1000)}`;
-      const newName = `${table.name} copy`;
-      addTable({ id: newId, name: newName });
+      const newName = `${table.name} Copy`;
+      const newCode = `${table.code}_copy_${timestamp}`;
+      
+      addTable({ 
+          id: newId, 
+          name: newName,
+          code: newCode,
+          kind: table.kind,
+          description: table.description
+      });
       setActiveMenu(null);
   };
 
@@ -96,6 +114,7 @@ const TablePanel: React.FC = () => {
 
   const saveRename = () => {
       if (renamingId && renameValue.trim()) {
+          // Also simple slugify for code if it was default? For now just update name.
           updateTable(renamingId, { name: renameValue.trim() });
       }
       setRenamingId(null);
@@ -115,6 +134,11 @@ const TablePanel: React.FC = () => {
       }
       e.stopPropagation();
   };
+
+  const filteredTables = tables.filter(t => 
+    t.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    t.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -141,7 +165,7 @@ const TablePanel: React.FC = () => {
          <div className="mb-4">
             <div className="px-4 py-1 text-xs font-bold text-muted-foreground uppercase mb-2 flex justify-between items-center">
                <span>Tables</span>
-               <span className="text-[10px] bg-muted px-1.5 rounded-full text-muted-foreground">{tables.length}</span>
+               <span className="text-[10px] bg-muted px-1.5 rounded-full text-muted-foreground">{filteredTables.length}</span>
             </div>
 
             {/* Search Box */}
@@ -150,10 +174,12 @@ const TablePanel: React.FC = () => {
                 <Input 
                     placeholder="Search tables..." 
                     className="h-8 pl-8 text-xs bg-muted/30 focus-visible:ring-primary"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
 
-            {tables.map(table => {
+            {filteredTables.map(table => {
                 const isActive = activeTableId === table.id;
                 const isRenaming = renamingId === table.id;
                 
@@ -161,13 +187,19 @@ const TablePanel: React.FC = () => {
                     <div 
                         key={table.id} 
                         onClick={() => handleTableClick(table.id)}
-                        className={`relative px-4 py-1.5 flex items-center gap-2 text-sm cursor-pointer transition-colors group ${
+                        className={`relative px-4 py-2 flex items-center gap-2 text-sm cursor-pointer transition-colors group ${
                             isActive 
                             ? 'bg-accent text-accent-foreground font-medium' 
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         }`}
                     >
-                        <Table size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                        <div className="flex flex-col items-center justify-center pt-0.5">
+                            {table.kind === 'view' ? (
+                                <Eye size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                            ) : (
+                                <Table size={14} className={`${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'} transition-colors`} />
+                            )}
+                        </div>
                         
                         {isRenaming ? (
                             <input
@@ -181,7 +213,10 @@ const TablePanel: React.FC = () => {
                                 className="flex-1 min-w-0 w-full h-7 -my-1 bg-background border border-primary rounded-sm px-2 text-xs outline-none text-foreground focus:ring-2 focus:ring-primary/20"
                             />
                         ) : (
-                            <span className="flex-1 truncate">{table.name}</span>
+                            <div className="flex flex-col flex-1 min-w-0">
+                                <span className="truncate leading-tight">{table.name}</span>
+                                <span className="truncate text-[10px] text-muted-foreground font-mono opacity-70">{table.code}</span>
+                            </div>
                         )}
                         
                         {/* Action Menu Button */}

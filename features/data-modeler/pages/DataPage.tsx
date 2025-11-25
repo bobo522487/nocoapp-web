@@ -93,7 +93,7 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
 
 const DataPage: React.FC = () => {
   const { activeTableId, tables } = useAppStore();
-  const [viewMode, setViewMode] = useState<'MODEL' | 'DATA'>('DATA');
+  const [viewMode, setViewMode] = useState<'MODEL' | 'DATA'>('MODEL');
   
   // Use state to manage the data locally since MOCK_DB is just the initial state
   const [schema, setSchema] = useState<SchemaField[]>([]);
@@ -106,10 +106,18 @@ const DataPage: React.FC = () => {
   useEffect(() => {
     // Load data based on activeTableId
     const data = MOCK_DB[activeTableId] || MOCK_DB['users'];
-    setSchema(data.schema);
-    setRecords(data.records);
+    
+    // Fallback if table ID doesn't match mock keys (e.g. new table)
+    if (!data) {
+        setSchema([]);
+        setRecords([]);
+    } else {
+        setSchema(data.schema);
+        setRecords(data.records);
+    }
+    
     // Reset view mode on table switch
-    setViewMode('DATA');
+    setViewMode('MODEL');
     setIsForeignKeyDrawerOpen(false);
   }, [activeTableId]);
 
@@ -381,6 +389,9 @@ const DataPage: React.FC = () => {
       }
   }));
 
+  const currentTable = tables.find(t => t.id === activeTableId);
+  const title = currentTable ? currentTable.name : activeTableId;
+
   return (
     <div className="flex-1 flex flex-col w-full h-full bg-background relative min-w-0">
       {/* View Mode Toggle / Header Extension */}
@@ -407,7 +418,7 @@ const DataPage: React.FC = () => {
     
       {viewMode === 'MODEL' ? (
           <DataGrid<SchemaField>
-            title={`${activeTableId} (Model)`}
+            title={`${title} (Model)`}
             columns={modelColumns}
             data={schema}
             onAdd={handleSchemaAdd}
@@ -417,7 +428,7 @@ const DataPage: React.FC = () => {
           />
       ) : (
           <DataGrid<any>
-            title={`${activeTableId} (Data)`}
+            title={`${title} (Data)`}
             columns={dataColumns}
             data={records}
             onAdd={handleDataAdd}

@@ -46,8 +46,16 @@ export interface Page {
 
 export interface DbTable {
   id: string;
+  orgId?: string;
+  sourceId?: string;
   name: string;
+  code: string;
+  physicalName?: string;
+  kind: 'table' | 'view';
   description?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }
 
 export interface GridItemData {

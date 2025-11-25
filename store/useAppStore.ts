@@ -48,10 +48,10 @@ const INITIAL_PAGES: Page[] = [
 ];
 
 const INITIAL_TABLES: DbTable[] = [
-    { id: 'users', name: 'users' },
-    { id: 'orders', name: 'orders' },
-    { id: 'products', name: 'products' },
-    { id: 'inventory_logs', name: 'inventory_logs' }
+    { id: 'users', name: 'Users', code: 'users', kind: 'table', description: 'System users' },
+    { id: 'orders', name: 'Orders', code: 'orders', kind: 'table', description: 'Customer orders' },
+    { id: 'products', name: 'Products', code: 'products', kind: 'table', description: 'Product catalog' },
+    { id: 'inventory_logs', name: 'Inventory Logs', code: 'inventory_logs', kind: 'table', description: 'Stock changes' }
 ];
 
 const INITIAL_LAYOUT: GridItemData[] = [

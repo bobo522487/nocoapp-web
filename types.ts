@@ -65,7 +65,7 @@ export interface GridItemData {
 export interface SchemaField {
   id: string;
   name: string;
-  type: 'text' | 'number' | 'email' | 'select' | 'status' | 'date' | 'boolean';
+  type: 'serial' | 'varchar' | 'int' | 'bigint' | 'float' | 'boolean' | 'date with time' | 'jsonb';
   defaultValue: string;
   isPrimary: boolean;
   isUnique: boolean;

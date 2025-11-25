@@ -168,6 +168,7 @@ function DataGrid<T>({
     // 2. Sort
     if (sort) {
         result.sort((a, b) => {
+            if (!sort) return 0;
             const valA = (a as any)[sort.fieldId];
             const valB = (b as any)[sort.fieldId];
             
@@ -387,7 +388,7 @@ function DataGrid<T>({
                             key={field.id}
                             onClick={() => {
                                 if (sort && sort.fieldId === field.accessorKey) {
-                                    setSort(sort.direction === 'asc' ? { ...sort, direction: 'desc' } : null);
+                                    setSort(sort?.direction === 'asc' ? { ...sort, direction: 'desc' } : null);
                                 } else if (field.accessorKey) {
                                     setSort({ fieldId: field.accessorKey as string, direction: 'asc' });
                                 }
@@ -398,7 +399,7 @@ function DataGrid<T>({
                                 <span>{field.header}</span>
                             </div>
                             {sort && sort.fieldId === field.accessorKey && (
-                                sort.direction === 'asc' ? <ArrowUpAZ size={14} /> : <ArrowDownAZ size={14} />
+                                sort?.direction === 'asc' ? <ArrowUpAZ size={14} /> : <ArrowDownAZ size={14} />
                             )}
                         </div>
                     ))}

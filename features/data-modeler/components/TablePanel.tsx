@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Plus, Table, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Search, Plus, Table, MoreVertical, Pencil, Trash2, Copy, Lock } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { useAppStore } from '../../../store/useAppStore';
@@ -168,23 +167,60 @@ const TablePanel: React.FC = () => {
                         {activeMenuTable === table.id && (
                         <div 
                             ref={menuRef}
-                            className="absolute right-2 top-8 w-32 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col py-1"
+                            className="absolute right-2 top-8 w-60 bg-popover border border-border rounded-lg shadow-xl z-50 overflow-hidden flex flex-col py-1 animate-in fade-in zoom-in-95 duration-100 origin-top-right"
+                            onClick={(e) => e.stopPropagation()}
                         >
+                            {/* Header */}
+                            <div className="px-3 py-2">
+                                <div className="flex items-center justify-between bg-muted/50 rounded border border-border/50 p-1.5 group/header hover:border-border transition-colors cursor-text" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex flex-col gap-0.5 overflow-hidden">
+                                         <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">TABLE ID</span>
+                                         <span className="text-xs font-mono font-medium truncate" title={table.id}>{table.id}</span>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 opacity-0 group-hover/header:opacity-100 transition-opacity" title="Copy ID">
+                                         <Copy size={12} />
+                                    </Button>
+                                </div>
+                            </div>
+                            
+                            <div className="h-px bg-border/50 mx-2 my-1" />
+
+                            {/* Actions */}
                             <button 
                                 onClick={(e) => startRenaming(table, e)}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-popover-foreground hover:bg-muted w-full text-left transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors"
                             >
-                                <Pencil size={12} /> Rename
+                                <Pencil size={14} className="opacity-70" /> Rename table
                             </button>
+
+                             <button 
+                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors"
+                            >
+                                <Copy size={14} className="opacity-70" /> Duplicate table
+                            </button>
+
+                            <div className="h-px bg-border/50 mx-2 my-1" />
+
+                             <button 
+                                className="flex items-center justify-between px-3 py-1.5 text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-muted mx-1 rounded-md transition-colors group/item"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Lock size={14} className="opacity-70" /> Edit permissions
+                                </div>
+                                <span className="text-[9px] font-bold text-sky-700 bg-sky-100 dark:text-sky-300 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-800 px-1.5 rounded-sm">Plus</span>
+                            </button>
+
+                            <div className="h-px bg-border/50 mx-2 my-1" />
+
                             <button 
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     deleteTable(table.id);
                                     setActiveMenuTable(null);
                                 }}
-                                className="flex items-center gap-2 px-3 py-2 text-xs text-destructive hover:bg-muted w-full text-left transition-colors"
+                                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 mx-1 rounded-md transition-colors"
                             >
-                                <Trash2 size={12} /> Delete
+                                <Trash2 size={14} /> Delete table
                             </button>
                         </div>
                         )}

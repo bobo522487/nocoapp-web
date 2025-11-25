@@ -1,25 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
 import DataGrid from '../../../components/DataGrid';
 import { ColumnDef } from '../../../components/DataTable';
 import { useAppStore } from '../../../store/useAppStore';
 import { SchemaField } from '../../../types';
-import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon, Plus } from 'lucide-react';
+import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon, Plus, Hash, Braces, ToggleLeft } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Switch } from "../../../components/ui/switch";
 import { Checkbox } from "../../../components/ui/checkbox";
 
+// --- Configuration ---
+const TYPE_CONFIG: Record<string, { pk: boolean; fk: boolean; unique: boolean; notNull: boolean }> = {
+    'serial':          { pk: true,  fk: false, unique: true,  notNull: true },
+    'varchar':         { pk: true,  fk: true,  unique: true,  notNull: true },
+    'int':             { pk: true,  fk: true,  unique: true,  notNull: true },
+    'bigint':          { pk: true,  fk: true,  unique: true,  notNull: true },
+    'float':           { pk: true,  fk: true,  unique: true,  notNull: true },
+    'boolean':         { pk: false, fk: false, unique: false, notNull: true },
+    'date with time':  { pk: false, fk: false, unique: false, notNull: true },
+    'jsonb':           { pk: false, fk: false, unique: false, notNull: true },
+};
+
+const DATA_TYPES = Object.keys(TYPE_CONFIG);
+
 // --- Mock Data Store ---
 const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
     'users': {
         schema: [
-            { id: 'id', name: 'ID', type: 'number', width: 60, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
-            { id: 'name', name: 'Name', type: 'text', width: 200, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '', flex: true },
-            { id: 'email', name: 'Email', type: 'email', width: 250, icon: Mail, isPrimary: false, isUnique: true, isNullable: true, defaultValue: 'null', flex: true },
-            { id: 'role', name: 'Role', type: 'select', width: 140, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Viewer' },
-            { id: 'status', name: 'Status', type: 'status', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Active' },
-            { id: 'created', name: 'Created At', type: 'date', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'id', name: 'ID', type: 'serial', width: 60, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
+            { id: 'name', name: 'Name', type: 'varchar', width: 200, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '', flex: true },
+            { id: 'email', name: 'Email', type: 'varchar', width: 250, icon: Mail, isPrimary: false, isUnique: true, isNullable: true, defaultValue: 'null', flex: true },
+            { id: 'role', name: 'Role', type: 'varchar', width: 140, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Viewer' },
+            { id: 'status', name: 'Status', type: 'varchar', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Active' },
+            { id: 'created', name: 'Created At', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
         ],
         records: [
             { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', created: '2023-10-01' },
@@ -32,11 +45,11 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
     },
     'orders': {
         schema: [
-            { id: 'id', name: 'Order ID', type: 'number', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
-            { id: 'customer', name: 'Customer', type: 'text', width: 200, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '', flex: true },
-            { id: 'amount', name: 'Amount', type: 'number', width: 120, icon: DollarSign, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0.00' },
-            { id: 'status', name: 'Status', type: 'status', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Pending' },
-            { id: 'date', name: 'Order Date', type: 'date', width: 160, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'id', name: 'Order ID', type: 'serial', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
+            { id: 'customer', name: 'Customer', type: 'varchar', width: 200, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '', flex: true },
+            { id: 'amount', name: 'Amount', type: 'float', width: 120, icon: DollarSign, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0.00' },
+            { id: 'status', name: 'Status', type: 'varchar', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Pending' },
+            { id: 'date', name: 'Order Date', type: 'date with time', width: 160, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
         ],
         records: [
             { id: 1001, customer: 'John Doe', amount: '$120.50', status: 'Completed', date: '2023-11-01' },
@@ -47,11 +60,11 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
     },
     'products': {
         schema: [
-            { id: 'id', name: 'SKU', type: 'number', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
-            { id: 'name', name: 'Product Name', type: 'text', width: 250, icon: Package, isPrimary: false, isUnique: true, isNullable: false, defaultValue: '', flex: true },
-            { id: 'category', name: 'Category', type: 'select', width: 150, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'General' },
-            { id: 'price', name: 'Price', type: 'number', width: 100, icon: DollarSign, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0.00' },
-            { id: 'stock', name: 'Stock', type: 'number', width: 100, icon: ShoppingCart, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0' },
+            { id: 'id', name: 'SKU', type: 'serial', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
+            { id: 'name', name: 'Product Name', type: 'varchar', width: 250, icon: Package, isPrimary: false, isUnique: true, isNullable: false, defaultValue: '', flex: true },
+            { id: 'category', name: 'Category', type: 'varchar', width: 150, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'General' },
+            { id: 'price', name: 'Price', type: 'float', width: 100, icon: DollarSign, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0.00' },
+            { id: 'stock', name: 'Stock', type: 'int', width: 100, icon: ShoppingCart, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0' },
         ],
         records: [
             { id: 501, name: 'Wireless Mouse', category: 'Electronics', price: '$29.99', stock: 150 },
@@ -62,11 +75,11 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
     },
     'inventory_logs': {
         schema: [
-            { id: 'id', name: 'Log ID', type: 'number', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
-            { id: 'product', name: 'Product SKU', type: 'text', width: 150, icon: Package, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '' },
-            { id: 'change', name: 'Quantity Change', type: 'number', width: 150, icon: ArrowUpDown, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0' },
-            { id: 'reason', name: 'Reason', type: 'select', width: 150, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Restock', flex: true },
-            { id: 'timestamp', name: 'Timestamp', type: 'date', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'id', name: 'Log ID', type: 'serial', width: 80, icon: FileKey, isPrimary: true, isUnique: true, isNullable: false, defaultValue: 'auto-inc' },
+            { id: 'product', name: 'Product SKU', type: 'varchar', width: 150, icon: Package, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '' },
+            { id: 'change', name: 'Quantity Change', type: 'int', width: 150, icon: ArrowUpDown, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0' },
+            { id: 'reason', name: 'Reason', type: 'varchar', width: 150, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Restock', flex: true },
+            { id: 'timestamp', name: 'Timestamp', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
         ],
         records: [
             { id: 1, product: 'SKU-501', change: '+50', reason: 'Restock', timestamp: '2023-11-01 10:00 AM' },
@@ -96,16 +109,40 @@ const DataPage: React.FC = () => {
   // --- Handlers for DataGrid Actions ---
 
   const handleSchemaChange = (rowId: string | number, colId: string, value: any) => {
-      setSchema(prev => prev.map(field => 
-          field.id === rowId ? { ...field, [colId]: value } : field
-      ));
+      setSchema(prev => prev.map(field => {
+          if (field.id === rowId) {
+              const updated = { ...field, [colId]: value };
+              
+              // If type changed, validate constraints
+              if (colId === 'type') {
+                  const config = TYPE_CONFIG[value as string];
+                  if (!config.pk && updated.isPrimary) updated.isPrimary = false;
+                  if (!config.unique && updated.isUnique) updated.isUnique = false;
+                  
+                  // Update icon based on type
+                  switch(value) {
+                    case 'serial': updated.icon = FileKey; break;
+                    case 'varchar': updated.icon = Type; break;
+                    case 'int': updated.icon = Hash; break;
+                    case 'bigint': updated.icon = Hash; break;
+                    case 'float': updated.icon = DollarSign; break;
+                    case 'boolean': updated.icon = ToggleLeft; break;
+                    case 'date with time': updated.icon = Calendar; break;
+                    case 'jsonb': updated.icon = Braces; break;
+                    default: updated.icon = Type;
+                  }
+              }
+              return updated;
+          }
+          return field;
+      }));
   };
 
   const handleSchemaAdd = () => {
       const newField: SchemaField = {
           id: `col_${Date.now()}`,
           name: 'New Column',
-          type: 'text',
+          type: 'varchar',
           defaultValue: '',
           isPrimary: false,
           isUnique: false,
@@ -172,7 +209,7 @@ const DataPage: React.FC = () => {
           minWidth: 120,
           editable: true,
           type: 'select',
-          options: ['text', 'number', 'email', 'select', 'status', 'date', 'boolean'],
+          options: DATA_TYPES,
           renderCell: (row) => (
              <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground bg-muted/40">
                  {row.type}
@@ -197,7 +234,8 @@ const DataPage: React.FC = () => {
               <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
                   <Checkbox 
                     checked={row.isPrimary} 
-                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isPrimary', !!checked)} 
+                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isPrimary', !!checked)}
+                    disabled={!TYPE_CONFIG[row.type].pk}
                   />
               </div>
           )
@@ -213,6 +251,7 @@ const DataPage: React.FC = () => {
                     checked={row.isUnique} 
                     onCheckedChange={(checked) => handleSchemaChange(row.id, 'isUnique', checked)} 
                     className="scale-75"
+                    disabled={!TYPE_CONFIG[row.type].unique}
                   />
               </div>
           )
@@ -228,6 +267,8 @@ const DataPage: React.FC = () => {
                     checked={row.isNullable} 
                     onCheckedChange={(checked) => handleSchemaChange(row.id, 'isNullable', checked)}
                     className="scale-75"
+                    // Not Null is supported for all types in the config, so we allow toggling 'isNullable' (effectively toggling Not Null constraint)
+                    disabled={!TYPE_CONFIG[row.type].notNull}
                   />
               </div>
           )
@@ -238,7 +279,13 @@ const DataPage: React.FC = () => {
           width: 130,
           renderCell: (row) => (
               <div className="flex justify-center w-full">
-                <Button variant="ghost" size="sm" className="h-6 text-[10px] text-blue-600 hover:text-blue-700 px-2 gap-1" onClick={(e) => e.stopPropagation()}>
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 text-[10px] text-blue-600 hover:text-blue-700 px-2 gap-1" 
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={!TYPE_CONFIG[row.type]?.fk}
+                >
                     <Plus size={10} /> Add Relation
                 </Button>
               </div>
@@ -267,9 +314,11 @@ const DataPage: React.FC = () => {
       width: field.flex ? undefined : field.width,
       flex: field.flex,
       minWidth: 100,
+      type: (field.type === 'int' || field.type === 'float' || field.type === 'bigint' || field.type === 'serial') ? 'number' : 'text',
       editable: field.id !== 'id' && field.id !== 'created', // ID and Created read-only (generic rule assumption)
       renderCell: (row, value) => {
-          if (field.type === 'status') {
+          // Special handling to maintain visual indicators for 'status' and 'role' fields
+          if (field.id === 'status') {
                const variant = value === 'Active' || value === 'Completed' ? 'default' :
                                value === 'Inactive' || value === 'Damage' ? 'destructive' : 'secondary';
                // If it is secondary (gray), make sure text is readable in dark mode
@@ -280,7 +329,7 @@ const DataPage: React.FC = () => {
                     </Badge>
                );
           }
-          if (field.type === 'select' && field.id === 'role') {
+          if (field.id === 'role') {
               return (
                   <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-muted/30 text-foreground">
                     {value}

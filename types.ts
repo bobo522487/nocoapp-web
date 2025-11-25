@@ -84,4 +84,5 @@ export interface SchemaField {
   flex?: boolean;
   width?: number;
   icon?: any;
+  timeZone?: string;
 }

@@ -1,10 +1,11 @@
 
+
 import React, { useState, useEffect } from 'react';
 import DataGrid from '../../../components/DataGrid';
 import { ColumnDef } from '../../../components/DataTable';
 import { useAppStore } from '../../../store/useAppStore';
 import { SchemaField, DbTable } from '../../../types';
-import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon, Plus, Hash, Braces, ToggleLeft } from 'lucide-react';
+import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon, Plus, Hash, Braces, ToggleLeft, Link2, Settings2 } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Switch } from "../../../components/ui/switch";
@@ -24,7 +25,31 @@ const TYPE_CONFIG: Record<string, { pk: boolean; fk: boolean; unique: boolean; n
     'jsonb':           { pk: false, fk: false, unique: false, notNull: true },
 };
 
-const DATA_TYPES = Object.keys(TYPE_CONFIG);
+const DATA_TYPES = [
+    { id: 'varchar', label: 'Varchar', icon: Type },
+    { id: 'int', label: 'Integer', icon: Hash },
+    { id: 'float', label: 'Float', icon: DollarSign },
+    { id: 'boolean', label: 'Boolean', icon: ToggleLeft },
+    { id: 'date with time', label: 'Date with Time', icon: Calendar },
+    { id: 'jsonb', label: 'JSONB', icon: Braces },
+    { id: 'serial', label: 'Serial', icon: FileKey },
+];
+
+const TIMEZONE_OFFSET_MAP: Record<string, string> = {
+    'UTC': 'UTC+00:00',
+    'America/New_York': 'UTC-05:00',
+    'America/Los_Angeles': 'UTC-08:00',
+    'Europe/London': 'UTC+00:00',
+    'Europe/Paris': 'UTC+01:00',
+    'Asia/Tokyo': 'UTC+09:00',
+    'Asia/Shanghai': 'UTC+08:00',
+    'Australia/Sydney': 'UTC+11:00',
+};
+
+const getTypeIcon = (type: string) => {
+    const found = DATA_TYPES.find(t => t.id === type);
+    return found ? found.icon : Type;
+};
 
 // --- Mock Data Store ---
 const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
@@ -35,7 +60,7 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
             { id: 'email', name: 'Email', type: 'varchar', width: 250, icon: Mail, isPrimary: false, isUnique: true, isNullable: true, defaultValue: 'null', flex: true },
             { id: 'role', name: 'Role', type: 'varchar', width: 140, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Viewer' },
             { id: 'status', name: 'Status', type: 'varchar', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Active' },
-            { id: 'created', name: 'Created At', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'created', name: 'Created At', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()', timeZone: 'UTC' },
         ],
         records: [
             { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin', status: 'Active', created: '2023-10-01' },
@@ -52,7 +77,7 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
             { id: 'customer', name: 'Customer', type: 'varchar', width: 200, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '', flex: true },
             { id: 'amount', name: 'Amount', type: 'float', width: 120, icon: DollarSign, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0.00' },
             { id: 'status', name: 'Status', type: 'varchar', width: 120, icon: CheckCircle2, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Pending' },
-            { id: 'date', name: 'Order Date', type: 'date with time', width: 160, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'date', name: 'Order Date', type: 'date with time', width: 160, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()', timeZone: 'Asia/Shanghai' },
         ],
         records: [
             { id: 1001, customer: 'John Doe', amount: '$120.50', status: 'Completed', date: '2023-11-01' },
@@ -82,7 +107,7 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
             { id: 'product', name: 'Product SKU', type: 'varchar', width: 150, icon: Package, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '' },
             { id: 'change', name: 'Quantity Change', type: 'int', width: 150, icon: ArrowUpDown, isPrimary: false, isUnique: false, isNullable: false, defaultValue: '0' },
             { id: 'reason', name: 'Reason', type: 'varchar', width: 150, icon: Type, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'Restock', flex: true },
-            { id: 'timestamp', name: 'Timestamp', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()' },
+            { id: 'timestamp', name: 'Timestamp', type: 'date with time', width: 180, icon: Calendar, isPrimary: false, isUnique: false, isNullable: false, defaultValue: 'now()', timeZone: 'America/New_York' },
         ],
         records: [
             { id: 1, product: 'SKU-501', change: '+50', reason: 'Restock', timestamp: '2023-11-01 10:00 AM' },
@@ -130,26 +155,24 @@ const DataPage: React.FC = () => {
       setSchema(prev => prev.map(field => {
           if (field.id === rowId) {
               const updated = { ...field, [colId]: value };
+
+              // If turning off FK, clear config
+              if (colId === 'isForeignKey' && value === false) {
+                  delete (updated as any).foreignKeyConfig;
+              }
               
               // If type changed, validate constraints
               if (colId === 'type') {
                   const config = TYPE_CONFIG[value as string];
                   if (!config.pk && updated.isPrimary) updated.isPrimary = false;
                   if (!config.unique && updated.isUnique) updated.isUnique = false;
-                  if (!config.fk && updated.isForeignKey) updated.isForeignKey = false;
+                  if (!config.fk && updated.isForeignKey) {
+                    updated.isForeignKey = false;
+                    delete (updated as any).foreignKeyConfig;
+                  }
                   
                   // Update icon based on type
-                  switch(value) {
-                    case 'serial': updated.icon = FileKey; break;
-                    case 'varchar': updated.icon = Type; break;
-                    case 'int': updated.icon = Hash; break;
-                    case 'bigint': updated.icon = Hash; break;
-                    case 'float': updated.icon = DollarSign; break;
-                    case 'boolean': updated.icon = ToggleLeft; break;
-                    case 'date with time': updated.icon = Calendar; break;
-                    case 'jsonb': updated.icon = Braces; break;
-                    default: updated.icon = Type;
-                  }
+                  updated.icon = getTypeIcon(value as string);
               }
 
               // Trigger Drawer if Foreign Key is enabled
@@ -171,9 +194,13 @@ const DataPage: React.FC = () => {
 
   const handleFKDrawerSave = (config: ForeignKeyConfig) => {
       // Update the schema to reflect the FK setting
-      // In a real app, we would store the targetTableId etc.
       if (currentForeignKeyField) {
-          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { ...f, isForeignKey: true } : f));
+          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { 
+              ...f, 
+              isForeignKey: true,
+              // Store config loosely on the field object for display
+              foreignKeyConfig: config
+          } as any : f));
       }
       setIsForeignKeyDrawerOpen(false);
       setCurrentForeignKeyField(null);
@@ -181,9 +208,28 @@ const DataPage: React.FC = () => {
 
   const handleFKDrawerDelete = () => {
       if (currentForeignKeyField) {
-          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { ...f, isForeignKey: false } : f));
+          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { 
+              ...f, 
+              isForeignKey: false,
+              foreignKeyConfig: undefined
+          } as any : f));
       }
       setIsForeignKeyDrawerOpen(false);
+      setCurrentForeignKeyField(null);
+  };
+
+  const handleFKDrawerClose = () => {
+      setIsForeignKeyDrawerOpen(false);
+      
+      // If we are closing without saving, check if we need to revert the isForeignKey toggle
+      if (currentForeignKeyField) {
+          // Look up current state of the field
+          const field = schema.find(f => f.id === currentForeignKeyField.id);
+          // If isForeignKey is true but no config exists, it means creation was cancelled
+          if (field && field.isForeignKey && !(field as any).foreignKeyConfig) {
+              setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { ...f, isForeignKey: false } : f));
+          }
+      }
       setCurrentForeignKeyField(null);
   };
 
@@ -199,17 +245,7 @@ const DataPage: React.FC = () => {
   };
 
   const handleColumnCreate = (fieldConfig: Partial<SchemaField> & { targetTableId?: string, foreignKeyConfig?: ForeignKeyConfig }) => {
-      // Determine Icon
-      let icon = Type;
-      switch(fieldConfig.type) {
-        case 'serial': icon = FileKey; break;
-        case 'int': 
-        case 'bigint': icon = Hash; break;
-        case 'float': icon = DollarSign; break;
-        case 'boolean': icon = ToggleLeft; break;
-        case 'date with time': icon = Calendar; break;
-        case 'jsonb': icon = Braces; break;
-      }
+      const icon = getTypeIcon(fieldConfig.type || 'varchar');
 
       const newField: SchemaField = {
           id: `col_${Date.now()}`,
@@ -223,11 +259,16 @@ const DataPage: React.FC = () => {
           description: '',
           flex: true,
           icon: icon,
-          width: 150
+          width: 150,
+          timeZone: fieldConfig.timeZone,
       };
+      
+      // Add foreignKeyConfig if present
+      if (fieldConfig.foreignKeyConfig) {
+          (newField as any).foreignKeyConfig = fieldConfig.foreignKeyConfig;
+      }
 
       setSchema([...schema, newField]);
-      // Note: We don't need to open the FK drawer here anymore because it was configured inside the CreateColumnDrawer
   };
 
   const handleSchemaDelete = (ids: (string | number)[]) => {
@@ -266,12 +307,11 @@ const DataPage: React.FC = () => {
           id: 'name',
           header: 'Column Name',
           accessorKey: 'name',
-          width: '20%',
-          minWidth: 180,
+          width: 180,
+          minWidth: 150,
           editable: true,
           renderCell: (row) => (
-              <div className="flex items-center gap-2 font-medium text-foreground">
-                  {row.icon && <row.icon size={14} className="text-muted-foreground" />}
+              <div className="flex items-center gap-2 font-medium text-foreground pl-1">
                   {row.name}
                   {row.isPrimary && <FileKey size={12} className="text-yellow-500 ml-1" />}
               </div>
@@ -281,41 +321,30 @@ const DataPage: React.FC = () => {
           id: 'type',
           header: 'Data Type',
           accessorKey: 'type',
-          width: '12%',
-          minWidth: 120,
+          width: 150,
+          minWidth: 140,
           editable: true,
           type: 'select',
-          options: DATA_TYPES,
-          renderCell: (row) => (
-             <Badge variant="outline" className="font-normal text-[10px] text-muted-foreground bg-muted/40">
-                 {row.type}
-             </Badge>
-          )
+          options: DATA_TYPES.map(t => ({ id: t.id, label: t.label, icon: t.icon })),
+          renderCell: (row) => {
+              const typeObj = DATA_TYPES.find(t => t.id === row.type) || DATA_TYPES[0];
+              const Icon = typeObj.icon;
+              return (
+                 <div className="flex items-center gap-2 text-foreground pl-1">
+                     <Icon size={14} className="text-muted-foreground" />
+                     <span className="text-sm">{typeObj.label}</span>
+                 </div>
+              );
+          }
       },
       {
           id: 'defaultValue',
           header: 'Default Value',
           accessorKey: 'defaultValue',
-          width: '12%',
+          width: 120,
           minWidth: 100,
           editable: true,
-          renderCell: (row) => <span className="text-muted-foreground font-mono">{row.defaultValue}</span>
-      },
-      {
-          id: 'isForeignKey',
-          header: <div className="text-center w-full text-[10px] font-semibold text-muted-foreground uppercase">Foreign Key</div>,
-          accessorKey: 'isForeignKey',
-          width: 120,
-          renderCell: (row) => (
-              <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
-                  <Switch 
-                    checked={!!row.isForeignKey} 
-                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isForeignKey', checked)}
-                    className="scale-75"
-                    disabled={!TYPE_CONFIG[row.type].fk}
-                  />
-              </div>
-          )
+          renderCell: (row) => <span className="text-foreground font-mono text-xs pl-1">{row.defaultValue}</span>
       },
       {
           id: 'isPrimary',
@@ -365,12 +394,46 @@ const DataPage: React.FC = () => {
           )
       },
       {
-          id: 'description',
-          header: 'Description',
-          accessorKey: 'description',
+          id: 'isForeignKey',
+          header: <div className="text-center w-full text-[10px] font-semibold text-muted-foreground uppercase">Foreign Key</div>,
+          accessorKey: 'isForeignKey',
+          width: 90,
+          renderCell: (row) => (
+              <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                  <Switch 
+                    checked={!!row.isForeignKey} 
+                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isForeignKey', checked)}
+                    className="scale-75"
+                    disabled={!TYPE_CONFIG[row.type].fk}
+                  />
+              </div>
+          )
+      },
+      {
+          id: 'fkInfo',
+          header: 'Relation',
+          width: 150,
           flex: true,
-          editable: true,
-          renderCell: (row) => <span className="text-muted-foreground italic truncate">{row.description || (row.isPrimary ? 'Unique identifier' : 'No description')}</span>
+          renderCell: (row) => {
+              if (!row.isForeignKey) return <span className="text-muted-foreground/30 text-xs pl-1">-</span>;
+              const fkConfig = (row as any).foreignKeyConfig as ForeignKeyConfig;
+              if (fkConfig && fkConfig.targetTableId) {
+                  const targetTable = tables.find(t => t.id === fkConfig.targetTableId);
+                  const targetTableDisplay = targetTable ? targetTable.name : fkConfig.targetTableId;
+                  return (
+                      <div className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenRelationDrawer(row); }}>
+                           <Link2 size={10} />
+                           <span>{targetTableDisplay}</span>
+                      </div>
+                  );
+              }
+               return (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer hover:text-foreground pl-1" onClick={(e) => { e.stopPropagation(); handleOpenRelationDrawer(row); }}>
+                       <Settings2 size={10} />
+                       <span className="italic">Configure</span>
+                  </div>
+              );
+          }
       }
   ];
 
@@ -378,9 +441,14 @@ const DataPage: React.FC = () => {
   const dataColumns: ColumnDef<any>[] = schema.map(field => ({
       id: field.id,
       header: (
-          <div className="flex items-center gap-2">
-             {field.icon && <field.icon size={13} className="text-muted-foreground" />}
-             {field.name}
+          <div className="flex items-center gap-2 w-full">
+             {field.icon && <field.icon size={13} className="text-muted-foreground shrink-0" />}
+             <span className="truncate">{field.name}</span>
+             {field.timeZone && TIMEZONE_OFFSET_MAP[field.timeZone] && (
+                 <Badge variant="outline" className="ml-auto text-[10px] h-4 px-1 text-muted-foreground font-normal border-muted-foreground/30 shrink-0">
+                     {TIMEZONE_OFFSET_MAP[field.timeZone]}
+                 </Badge>
+             )}
           </div>
       ),
       accessorKey: field.id,
@@ -391,7 +459,7 @@ const DataPage: React.FC = () => {
       editable: field.id !== 'id' && field.id !== 'created', // ID and Created read-only (generic rule assumption)
       renderCell: (row, value) => {
           if (field.id === 'status') {
-               const variant = value === 'Active' || value === 'Completed' ? 'default' :
+               const variant = value === 'Active' || value === 'Completed' ? 'default' : 
                                value === 'Inactive' || value === 'Damage' ? 'destructive' : 'secondary';
                const className = variant === 'secondary' ? "text-foreground bg-muted" : "";
                return (
@@ -407,7 +475,7 @@ const DataPage: React.FC = () => {
                   </Badge>
               );
           }
-          return <span className="truncate text-foreground">{value}</span>;
+          return <span className="truncate text-foreground pl-1">{value}</span>;
       }
   }));
 
@@ -463,7 +531,7 @@ const DataPage: React.FC = () => {
       {currentForeignKeyField && (
         <ForeignKeyDrawer
             isOpen={isForeignKeyDrawerOpen}
-            onClose={() => setIsForeignKeyDrawerOpen(false)}
+            onClose={handleFKDrawerClose}
             sourceTableName={activeTableId}
             sourceColumnName={currentForeignKeyField.name}
             tables={tables} // Pass tables from store

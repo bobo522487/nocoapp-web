@@ -1,4 +1,5 @@
 
+
 export enum FileType {
   FILE = 'FILE',
   FOLDER = 'FOLDER'
@@ -84,4 +85,5 @@ export interface SchemaField {
   flex?: boolean;
   width?: number;
   icon?: any;
+  timeZone?: string;
 }

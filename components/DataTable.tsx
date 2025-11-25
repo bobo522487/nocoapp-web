@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Table,
@@ -8,6 +9,7 @@ import {
   TableRow,
 } from "../components/ui/table";
 import { Checkbox } from "./ui/checkbox";
+import Dropdown from './common/Dropdown';
 
 export interface ColumnDef<T> {
   id: string;
@@ -18,7 +20,7 @@ export interface ColumnDef<T> {
   flex?: boolean;
   editable?: boolean;
   type?: 'text' | 'number' | 'select';
-  options?: string[];
+  options?: any[]; // Supports strings or rich objects
   renderCell?: (row: T, value: any) => React.ReactNode;
   className?: string;
 }
@@ -48,7 +50,7 @@ const DataTable = <T extends { [key: string]: any }>({
 }: DataTableProps<T>) => {
   const [editingCell, setEditingCell] = useState<{ rowId: string | number; colId: string } | null>(null);
   const [editValue, setEditValue] = useState<any>('');
-  const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -171,7 +173,7 @@ const DataTable = <T extends { [key: string]: any }>({
                          e.stopPropagation(); 
                          handleStartEdit(row, col);
                       }}
-                      className={`p-0 relative h-9 align-middle ${col.editable ? 'cursor-pointer' : ''} ${col.className || ''}`}
+                      className={`p-0 relative h-9 align-middle text-sm text-foreground ${col.editable ? 'cursor-pointer' : ''} ${col.className || ''}`}
                       style={{
                         width: col.flex ? undefined : col.width,
                         minWidth: col.minWidth,
@@ -179,17 +181,25 @@ const DataTable = <T extends { [key: string]: any }>({
                     >
                       {isEditing ? (
                         col.type === 'select' ? (
-                            <select
-                                ref={inputRef as React.RefObject<HTMLSelectElement>}
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onBlur={handleSaveEdit}
-                                onKeyDown={handleKeyDown}
-                                className="absolute inset-0 w-full h-full z-20 bg-background text-foreground border-2 border-primary outline-none text-xs px-2"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {col.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
+                            <div className="absolute inset-0 w-full h-full z-20">
+                                <Dropdown
+                                    triggerLabel={
+                                        col.options?.find((o: any) => o.id === editValue || o === editValue)?.label || editValue
+                                    }
+                                    triggerIcon={
+                                        col.options?.find((o: any) => o.id === editValue)?.icon
+                                    }
+                                    items={col.options?.map((o: any) => typeof o === 'string' ? { id: o, label: o } : o) || []}
+                                    onSelect={(item) => {
+                                        if (onCellEdit && editingCell) {
+                                            onCellEdit(editingCell.rowId, editingCell.colId, item.id);
+                                            setEditingCell(null);
+                                        }
+                                    }}
+                                    className="w-full h-full border-2 border-primary rounded-none px-2 bg-background"
+                                    width={200}
+                                />
+                            </div>
                         ) : (
                             <input
                                 ref={inputRef as React.RefObject<HTMLInputElement>}

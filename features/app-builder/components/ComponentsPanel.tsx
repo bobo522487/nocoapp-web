@@ -1,12 +1,15 @@
+
 import React, { useState } from 'react';
 import { 
   Search, 
   ChevronDown, 
   ChevronRight, 
   LayoutGrid,
-  GripVertical
+  GripVertical,
+  X
 } from 'lucide-react';
 import { Input } from "../../../components/ui/input";
+import { Button } from "../../../components/ui/button";
 import { useDraggable } from '@dnd-kit/core';
 import { registry } from '../../../widgets/registry';
 import { WidgetManifest } from '../../../widgets/types';
@@ -56,13 +59,21 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-card animate-in slide-in-from-left-4 duration-200">
-      {/* Header Tabs */}
-      <div className="flex items-center p-3 pb-0 border-b border-border shrink-0">
+    <div className="flex flex-col h-full bg-background animate-in slide-in-from-left-4 duration-200">
+      {/* Header (Unified) */}
+      <div className="h-12 px-4 border-b border-border flex justify-between items-center shrink-0 bg-muted/10">
+          <span className="font-medium text-sm text-muted-foreground">Components</span>
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onClose}>
+             <X size={14} className="text-muted-foreground hover:text-foreground"/>
+          </Button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center px-4 pt-3 pb-0 border-b border-border shrink-0 bg-background">
          <div className="flex-1 flex gap-4">
             <button 
                 onClick={() => setActiveTab('components')}
-                className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'components' 
                     ? 'text-primary border-primary' 
                     : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -72,7 +83,7 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
             </button>
             <button 
                 onClick={() => setActiveTab('modules')}
-                className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`pb-2 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'modules' 
                     ? 'text-primary border-primary' 
                     : 'text-muted-foreground border-transparent hover:text-foreground'
@@ -84,67 +95,69 @@ const ComponentsPanel: React.FC<ComponentsPanelProps> = ({ onClose }) => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent p-3">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent p-0">
         
         {/* Search Bar */}
-        <div className="mb-4 relative">
-             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <div className="px-3 my-4 relative">
+             <Search size={12} className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground" />
              <Input 
                type="text" 
-               placeholder="Search components" 
-               className="pl-9 h-8 text-xs bg-muted/30 focus-visible:ring-primary"
+               placeholder="Search components..." 
+               className="pl-8 h-8 text-xs bg-muted/30 focus-visible:ring-primary"
              />
         </div>
 
-        {activeTab === 'components' ? (
-            /* Components Tab */
-            <div className="space-y-1">
-                {categories.map((category) => {
-                    const widgets = registry.getByCategory(category);
-                    return (
-                        <div key={category} className="border-b border-transparent">
-                            <button 
-                                onClick={() => toggleSection(category)}
-                                className="w-full flex items-center justify-between py-2 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors group"
-                            >
-                                <span>{category}</span>
-                                {openSections[category] ? (
-                                    <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary" />
-                                ) : (
-                                    <ChevronRight size={12} className="text-muted-foreground group-hover:text-primary" />
+        <div className="px-3 pb-4">
+            {activeTab === 'components' ? (
+                /* Components Tab */
+                <div className="space-y-1">
+                    {categories.map((category) => {
+                        const widgets = registry.getByCategory(category);
+                        return (
+                            <div key={category} className="border-b border-transparent">
+                                <button 
+                                    onClick={() => toggleSection(category)}
+                                    className="w-full flex items-center justify-between py-2 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors group"
+                                >
+                                    <span>{category}</span>
+                                    {openSections[category] ? (
+                                        <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary" />
+                                    ) : (
+                                        <ChevronRight size={12} className="text-muted-foreground group-hover:text-primary" />
+                                    )}
+                                </button>
+                                
+                                {openSections[category] && (
+                                    <div className="grid grid-cols-3 gap-2 pb-3 animate-in fade-in zoom-in-95 duration-150">
+                                        {widgets.map((def) => (
+                                            <DraggableItem key={def.manifest.type} manifest={def.manifest} />
+                                        ))}
+                                    </div>
                                 )}
-                            </button>
-                            
-                            {openSections[category] && (
-                                <div className="grid grid-cols-3 gap-2 pb-3 animate-in fade-in zoom-in-95 duration-150">
-                                    {widgets.map((def) => (
-                                        <DraggableItem key={def.manifest.type} manifest={def.manifest} />
-                                    ))}
-                                </div>
-                            )}
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                /* Modules Tab (Static for now) */
+                <div className="space-y-3">
+                    {[
+                        { id: 1, title: 'Auth Form', icon: LayoutGrid },
+                        { id: 2, title: 'Header', icon: GripVertical }
+                    ].map((mod) => (
+                        <div 
+                            key={mod.id} 
+                            className="flex items-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-pointer transition-all group"
+                        >
+                            <div className="w-12 h-10 flex items-center justify-center bg-muted/50 rounded mr-3 group-hover:bg-background transition-colors">
+                                <mod.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground">{mod.title}</span>
                         </div>
-                    );
-                })}
-            </div>
-        ) : (
-            /* Modules Tab (Static for now) */
-            <div className="space-y-3">
-                {[
-                    { id: 1, title: 'Auth Form', icon: LayoutGrid },
-                    { id: 2, title: 'Header', icon: GripVertical }
-                ].map((mod) => (
-                    <div 
-                        key={mod.id} 
-                        className="flex items-center p-2 rounded border border-transparent hover:bg-muted hover:border-border cursor-pointer transition-all group"
-                    >
-                        <div className="w-12 h-10 flex items-center justify-center bg-muted/50 rounded mr-3 group-hover:bg-background transition-colors">
-                             <mod.icon size={20} strokeWidth={1.5} className="text-muted-foreground group-hover:text-primary" />
-                        </div>
-                        <span className="text-sm font-medium text-foreground">{mod.title}</span>
-                    </div>
-                ))}
-            </div>
-        )}
+                    ))}
+                </div>
+            )}
+        </div>
 
       </div>
     </div>

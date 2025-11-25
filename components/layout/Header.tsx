@@ -1,15 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks, Palette, Check, Triangle, Database, MessageSquare, Code } from 'lucide-react';
+import { Search as SearchIcon, Bell, Moon, Sun, HelpCircle, Blocks, Palette, Check, Triangle, Database, MessageSquare, Code, LogOut, User } from 'lucide-react';
 import Breadcrumb from '../common/Breadcrumb';
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useAppStore, AppTheme } from '../../store/useAppStore';
 import Dropdown from '../common/Dropdown';
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
+  const navigate = useNavigate();
   const { activeView, isDarkMode, toggleTheme, theme, setAppTheme } = useAppStore();
   const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
   const themeButtonRef = useRef<HTMLButtonElement>(null);
+  const profileButtonRef = useRef<HTMLDivElement>(null);
 
   const themes: { id: AppTheme; label: string; icon: any }[] = [
     { id: 'vercel', label: 'Vercel (Default)', icon: Triangle },
@@ -17,6 +22,18 @@ const Header: React.FC = () => {
     { id: 'slack', label: 'Slack', icon: MessageSquare },
     { id: 'vscode', label: 'VS Code', icon: Code },
   ];
+
+  const profileItems = [
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'logout', label: 'Log out', icon: LogOut },
+  ];
+
+  const handleProfileSelect = (item: any) => {
+      if (item.id === 'logout') {
+          navigate('/login');
+      }
+      setIsProfileOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -94,8 +111,27 @@ const Header: React.FC = () => {
 
           <div className="h-5 w-px bg-border mx-1"></div>
 
-          <div className="w-8 h-8 bg-gradient-to-tr from-primary to-purple-500 rounded-full cursor-pointer ring-offset-background transition-all hover:ring-2 ring-ring">
-            <div className="w-full h-full flex items-center justify-center text-primary-foreground text-xs font-bold">JD</div>
+          <div className="relative">
+            <div 
+                ref={profileButtonRef}
+                className="w-8 h-8 bg-gradient-to-tr from-primary to-purple-500 rounded-full cursor-pointer ring-offset-background transition-all hover:ring-2 ring-ring"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+            >
+                <div className="w-full h-full flex items-center justify-center text-primary-foreground text-xs font-bold select-none">JD</div>
+            </div>
+
+            <Dropdown 
+                open={isProfileOpen}
+                onOpenChange={setIsProfileOpen}
+                anchorRef={profileButtonRef}
+                triggerLabel=""
+                className="hidden" 
+                items={profileItems}
+                onSelect={handleProfileSelect}
+                width={160}
+                searchPlaceholder=""
+                align="end"
+            />
           </div>
         </div>
       </div>

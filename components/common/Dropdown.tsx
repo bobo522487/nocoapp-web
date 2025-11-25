@@ -22,6 +22,7 @@ interface DropdownProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   anchorRef?: React.RefObject<HTMLElement>;
+  align?: 'start' | 'end';
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -36,7 +37,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   className = "",
   open,
   onOpenChange,
-  anchorRef
+  anchorRef,
+  align = 'start'
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -62,24 +64,52 @@ const Dropdown: React.FC<DropdownProps> = ({
             const rect = target.getBoundingClientRect();
             // Only update if we have valid coordinates
             if (rect.width > 0 || rect.height > 0) {
+                let left = rect.left;
+                
+                // Align end logic
+                if (align === 'end') {
+                    left = rect.right - width;
+                }
+
+                // Simple collision detection for right edge
+                const viewportWidth = window.innerWidth;
+                if (align === 'start' && left + width > viewportWidth) {
+                    // Flip to end if it overflows right
+                    left = rect.right - width;
+                } else if (align === 'end' && left < 0) {
+                     // Flip to start if it overflows left
+                    left = rect.left;
+                }
+
                 setPosition({
                     top: rect.bottom + 4,
-                    left: rect.left
+                    left: left
                 });
                 setSearchTerm('');
             }
         }
     }
-  }, [isOpen, anchorRef]);
+  }, [isOpen, anchorRef, align, width]);
 
   const toggleDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
     
     if (!isOpen && !anchorRef && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      let left = rect.left;
+      
+      if (align === 'end') {
+          left = rect.right - width;
+      }
+       // Simple collision detection
+       const viewportWidth = window.innerWidth;
+       if (align === 'start' && left + width > viewportWidth) {
+           left = rect.right - width;
+       }
+
       setPosition({
         top: rect.bottom + 4,
-        left: rect.left
+        left: left
       });
       setSearchTerm('');
     }

@@ -8,6 +8,9 @@ import DataPage from '../features/data-modeler/pages/DataPage';
 import Header from '../components/layout/Header';
 import AppBuilderPage from '../features/app-builder/pages/AppBuilderPage';
 import DashboardPage from '../features/dashboard/pages/DashboardPage';
+import LoginPage from '../features/auth/pages/LoginPage';
+import RegisterPage from '../features/auth/pages/RegisterPage';
+import ForgotPasswordPage from '../features/auth/pages/ForgotPasswordPage';
 import { INITIAL_FILES } from '../constants';
 import { FileSystemNode, FileType, ViewMode, Tab, SchemaField } from '../types';
 import { useResizable } from '../hooks/useResizable';
@@ -285,6 +288,12 @@ const App: React.FC = () => {
     >
       <HashRouter>
         <Routes>
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+          {/* Main App Routes */}
           <Route element={
             <MainLayout 
                 sidebarProps={sidebarProps} 

@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import DataGrid from '../../../components/DataGrid';
 import { ColumnDef } from '../../../components/DataTable';
 import { useAppStore } from '../../../store/useAppStore';
-import { SchemaField } from '../../../types';
+import { SchemaField, DbTable } from '../../../types';
 import { FileKey, Type, Mail, CheckCircle2, Calendar, DollarSign, Package, ShoppingCart, ArrowUpDown, Database, TableIcon, Plus, Hash, Braces, ToggleLeft } from 'lucide-react';
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import { Switch } from "../../../components/ui/switch";
 import { Checkbox } from "../../../components/ui/checkbox";
+import ForeignKeyDrawer, { ForeignKeyConfig } from '../components/ForeignKeyDrawer';
 
 // --- Configuration ---
 const TYPE_CONFIG: Record<string, { pk: boolean; fk: boolean; unique: boolean; notNull: boolean }> = {
@@ -90,12 +92,16 @@ const MOCK_DB: Record<string, { schema: SchemaField[], records: any[] }> = {
 }
 
 const DataPage: React.FC = () => {
-  const { activeTableId } = useAppStore();
+  const { activeTableId, tables } = useAppStore();
   const [viewMode, setViewMode] = useState<'MODEL' | 'DATA'>('DATA');
   
   // Use state to manage the data locally since MOCK_DB is just the initial state
   const [schema, setSchema] = useState<SchemaField[]>([]);
   const [records, setRecords] = useState<any[]>([]);
+
+  // Foreign Key Drawer State
+  const [isForeignKeyDrawerOpen, setIsForeignKeyDrawerOpen] = useState(false);
+  const [currentForeignKeyField, setCurrentForeignKeyField] = useState<SchemaField | null>(null);
 
   useEffect(() => {
     // Load data based on activeTableId
@@ -104,6 +110,7 @@ const DataPage: React.FC = () => {
     setRecords(data.records);
     // Reset view mode on table switch
     setViewMode('DATA');
+    setIsForeignKeyDrawerOpen(false);
   }, [activeTableId]);
 
   // --- Handlers for DataGrid Actions ---
@@ -118,8 +125,7 @@ const DataPage: React.FC = () => {
                   const config = TYPE_CONFIG[value as string];
                   if (!config.pk && updated.isPrimary) updated.isPrimary = false;
                   if (!config.unique && updated.isUnique) updated.isUnique = false;
-                  // Note: fk is not tracked in SchemaField interface directly as a boolean, 
-                  // but we disable the "Add Relation" button based on config.
+                  if (!config.fk && updated.isForeignKey) updated.isForeignKey = false;
                   
                   // Update icon based on type
                   switch(value) {
@@ -134,10 +140,47 @@ const DataPage: React.FC = () => {
                     default: updated.icon = Type;
                   }
               }
+
+              // Trigger Drawer if Foreign Key is enabled
+              if (colId === 'isForeignKey' && value === true) {
+                  setCurrentForeignKeyField(updated);
+                  setIsForeignKeyDrawerOpen(true);
+              }
+
               return updated;
           }
           return field;
       }));
+  };
+
+  const handleOpenRelationDrawer = (field: SchemaField) => {
+      setCurrentForeignKeyField(field);
+      setIsForeignKeyDrawerOpen(true);
+  };
+
+  const handleFKDrawerSave = (config: ForeignKeyConfig) => {
+      // Update the schema to reflect the FK setting
+      // In a real app, we would store the targetTableId etc.
+      if (currentForeignKeyField) {
+          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { ...f, isForeignKey: true } : f));
+      }
+      setIsForeignKeyDrawerOpen(false);
+      setCurrentForeignKeyField(null);
+  };
+
+  const handleFKDrawerDelete = () => {
+      if (currentForeignKeyField) {
+          setSchema(prev => prev.map(f => f.id === currentForeignKeyField.id ? { ...f, isForeignKey: false } : f));
+      }
+      setIsForeignKeyDrawerOpen(false);
+      setCurrentForeignKeyField(null);
+  };
+
+  const getTargetColumns = (tableId: string) => {
+      // Since MOCK_DB is local here but we need it for dropdowns, we access it directly
+      const tableData = MOCK_DB[tableId];
+      if (!tableData) return [];
+      return tableData.schema.map(f => ({ id: f.id, name: f.name }));
   };
 
   const handleSchemaAdd = () => {
@@ -147,6 +190,7 @@ const DataPage: React.FC = () => {
           type: 'varchar',
           defaultValue: '',
           isPrimary: false,
+          isForeignKey: false,
           isUnique: false,
           isNullable: true,
           description: 'New field description',
@@ -228,6 +272,22 @@ const DataPage: React.FC = () => {
           renderCell: (row) => <span className="text-muted-foreground font-mono">{row.defaultValue}</span>
       },
       {
+          id: 'isForeignKey',
+          header: <div className="text-center w-full text-[10px] font-semibold text-muted-foreground uppercase">Foreign Key</div>,
+          accessorKey: 'isForeignKey',
+          width: 120,
+          renderCell: (row) => (
+              <div className="flex justify-center w-full" onClick={(e) => e.stopPropagation()}>
+                  <Switch 
+                    checked={!!row.isForeignKey} 
+                    onCheckedChange={(checked) => handleSchemaChange(row.id, 'isForeignKey', checked)}
+                    className="scale-75"
+                    disabled={!TYPE_CONFIG[row.type].fk}
+                  />
+              </div>
+          )
+      },
+      {
           id: 'isPrimary',
           header: <div className="text-center w-full text-[10px] font-semibold text-muted-foreground uppercase">Primary</div>,
           accessorKey: 'isPrimary',
@@ -269,29 +329,8 @@ const DataPage: React.FC = () => {
                     checked={row.isNullable} 
                     onCheckedChange={(checked) => handleSchemaChange(row.id, 'isNullable', checked)}
                     className="scale-75"
-                    // If notNull is true, it means the column supports Not Null.
-                    // If we want to strictly allow toggling, we check if the type supports Not Null constraint. 
-                    // Based on the user table, all types support Not Null.
                     disabled={!TYPE_CONFIG[row.type].notNull}
                   />
-              </div>
-          )
-      },
-      {
-          id: 'relations',
-          header: 'Relations',
-          width: 130,
-          renderCell: (row) => (
-              <div className="flex justify-center w-full">
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 text-[10px] text-blue-600 hover:text-blue-700 px-2 gap-1" 
-                    onClick={(e) => e.stopPropagation()}
-                    disabled={!TYPE_CONFIG[row.type]?.fk}
-                >
-                    <Plus size={10} /> Add Relation
-                </Button>
               </div>
           )
       },
@@ -321,11 +360,9 @@ const DataPage: React.FC = () => {
       type: (field.type === 'int' || field.type === 'float' || field.type === 'bigint' || field.type === 'serial') ? 'number' : 'text',
       editable: field.id !== 'id' && field.id !== 'created', // ID and Created read-only (generic rule assumption)
       renderCell: (row, value) => {
-          // Special handling to maintain visual indicators for 'status' and 'role' fields
           if (field.id === 'status') {
                const variant = value === 'Active' || value === 'Completed' ? 'default' :
                                value === 'Inactive' || value === 'Damage' ? 'destructive' : 'secondary';
-               // If it is secondary (gray), make sure text is readable in dark mode
                const className = variant === 'secondary' ? "text-foreground bg-muted" : "";
                return (
                    <Badge variant={variant} className={`text-[10px] h-5 px-1.5 font-normal ${className}`}>
@@ -388,6 +425,19 @@ const DataPage: React.FC = () => {
             onDelete={handleDataDelete}
             keyField="id"
           />
+      )}
+
+      {currentForeignKeyField && (
+        <ForeignKeyDrawer
+            isOpen={isForeignKeyDrawerOpen}
+            onClose={() => setIsForeignKeyDrawerOpen(false)}
+            sourceTableName={activeTableId}
+            sourceColumnName={currentForeignKeyField.name}
+            tables={tables} // Pass tables from store
+            getTargetColumns={getTargetColumns} // Function to resolve columns for selected table
+            onSave={handleFKDrawerSave}
+            onDelete={handleFKDrawerDelete}
+        />
       )}
     </div>
   );

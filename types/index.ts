@@ -1,3 +1,4 @@
+
 export enum FileType {
   FILE = 'FILE',
   FOLDER = 'FOLDER'
@@ -68,6 +69,7 @@ export interface SchemaField {
   type: 'serial' | 'varchar' | 'int' | 'bigint' | 'float' | 'boolean' | 'date with time' | 'jsonb';
   defaultValue: string;
   isPrimary: boolean;
+  isForeignKey?: boolean;
   isUnique: boolean;
   isNullable: boolean;
   description?: string;

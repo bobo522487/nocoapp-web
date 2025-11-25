@@ -215,7 +215,6 @@ const TablePanel: React.FC = () => {
                         ) : (
                             <div className="flex flex-col flex-1 min-w-0">
                                 <span className="truncate leading-tight">{table.name}</span>
-                                <span className="truncate text-[10px] text-muted-foreground font-mono opacity-70">{table.code}</span>
                             </div>
                         )}
                         

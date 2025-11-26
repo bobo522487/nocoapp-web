@@ -15,8 +15,60 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-grid-layout@1.4.4/css/styles.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/react-resizable@3.0.5/css/styles.css">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
+    <!-- Tailwind CSS v4 -->
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    
+    <style type="text/tailwindcss">
+      @import "tailwindcss";
+
+      @theme {
+        --color-border: hsl(var(--border));
+        --color-input: hsl(var(--input));
+        --color-ring: hsl(var(--ring));
+        --color-background: hsl(var(--background));
+        --color-foreground: hsl(var(--foreground));
+
+        --color-primary: hsl(var(--primary));
+        --color-primary-foreground: hsl(var(--primary-foreground));
+
+        --color-secondary: hsl(var(--secondary));
+        --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+        --color-destructive: hsl(var(--destructive));
+        --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+        --color-muted: hsl(var(--muted));
+        --color-muted-foreground: hsl(var(--muted-foreground));
+
+        --color-accent: hsl(var(--accent));
+        --color-accent-foreground: hsl(var(--accent-foreground));
+
+        --color-popover: hsl(var(--popover));
+        --color-popover-foreground: hsl(var(--popover-foreground));
+
+        --color-card: hsl(var(--card));
+        --color-card-foreground: hsl(var(--card-foreground));
+
+        --radius-lg: var(--radius);
+        --radius-md: calc(var(--radius) - 2px);
+        --radius-sm: calc(var(--radius) - 4px);
+
+        --font-sans: 'Inter', system-ui, sans-serif;
+        --font-mono: 'JetBrains Mono', Menlo, monospace;
+        
+        --animate-accordion-down: accordion-down 0.2s ease-out;
+        --animate-accordion-up: accordion-up 0.2s ease-out;
+      }
+
+      @keyframes accordion-down {
+        from { height: 0; }
+        to { height: var(--radix-accordion-content-height); }
+      }
+      @keyframes accordion-up {
+        from { height: var(--radix-accordion-content-height); }
+        to { height: 0; }
+      }
+
       @layer base {
         :root {
           /* Default (Vercel/Zinc) Light Theme */
@@ -79,7 +131,7 @@
           --primary-foreground: 154 60% 5%;
           --secondary: 240 4% 16%;
           --muted: 240 4% 16%;
-          --muted-foreground: 240 4% 60%; /* Increased contrast */
+          --muted-foreground: 240 4% 60%;
           --accent: 240 4% 16%;
           --border: 240 4% 18%;
           --input: 240 4% 18%;
@@ -88,7 +140,7 @@
 
         /* --- Slack Theme --- */
         .theme-slack {
-          --primary: 295 50% 30%; /* Aubergine */
+          --primary: 295 50% 30%;
           --primary-foreground: 0 0% 100%;
           --ring: 295 50% 30%;
         }
@@ -110,12 +162,12 @@
 
         /* --- VS Code Theme --- */
         .theme-vscode {
-          --primary: 210 100% 40%; /* VS Code Blue */
+          --primary: 210 100% 40%;
           --primary-foreground: 0 0% 100%;
           --ring: 210 100% 40%;
         }
         .theme-vscode.dark {
-          --background: 220 15% 10%; /* #1e1e1e */
+          --background: 220 15% 10%;
           --foreground: 220 10% 85%;
           --card: 220 15% 13%;
           --popover: 220 15% 10%;
@@ -129,45 +181,43 @@
           --input: 220 15% 18%;
           --ring: 210 100% 45%;
         }
-      }
 
-      body {
-        @apply bg-background text-foreground antialiased transition-colors duration-300;
-        font-feature-settings: "rlig" 1, "calt" 1;
-      }
+        html, body, #root {
+          height: 100%;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
 
-      /* Ensure inputs inherit text color by default in dark mode */
-      input, textarea, select {
-        @apply bg-transparent text-foreground;
-      }
-      
-      .border-border {
-        border-color: hsl(var(--border));
-      }
-      
-      /* Refined scrollbar */
-      ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent; 
-      }
-      ::-webkit-scrollbar-thumb {
-        @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40 transition-colors border-4 border-solid border-transparent bg-clip-content;
+        body {
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
+          font-family: var(--font-sans);
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+        
+        * {
+           border-color: hsl(var(--border));
+        }
       }
 
       /* React Grid Layout Custom Styles */
       .react-grid-item.react-grid-placeholder {
-        @apply bg-primary/10 border-2 border-dashed border-primary rounded-lg opacity-50 !important;
+        background: hsl(var(--primary) / 0.1) !important;
+        border: 2px dashed hsl(var(--primary));
+        border-radius: var(--radius);
+        opacity: 0.5;
       }
       
       .react-resizable-handle {
-        @apply opacity-0 transition-opacity z-50;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 50;
       }
       
       .react-grid-item:hover .react-resizable-handle {
-        @apply opacity-100;
+        opacity: 1;
       }
 
       .react-resizable-handle::after {
@@ -182,67 +232,15 @@
         border-bottom-right-radius: 2px;
         box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
       }
-    </style>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          container: {
-            center: true,
-            padding: "2rem",
-            screens: {
-              "2xl": "1400px",
-            },
-          },
-          extend: {
-            colors: {
-              border: "hsl(var(--border))",
-              input: "hsl(var(--input))",
-              ring: "hsl(var(--ring))",
-              background: "hsl(var(--background))",
-              foreground: "hsl(var(--foreground))",
-              primary: {
-                DEFAULT: "hsl(var(--primary))",
-                foreground: "hsl(var(--primary-foreground))",
-              },
-              secondary: {
-                DEFAULT: "hsl(var(--secondary))",
-                foreground: "hsl(var(--secondary-foreground))",
-              },
-              destructive: {
-                DEFAULT: "hsl(var(--destructive))",
-                foreground: "hsl(var(--destructive-foreground))",
-              },
-              muted: {
-                DEFAULT: "hsl(var(--muted))",
-                foreground: "hsl(var(--muted-foreground))",
-              },
-              accent: {
-                DEFAULT: "hsl(var(--accent))",
-                foreground: "hsl(var(--accent-foreground))",
-              },
-              popover: {
-                DEFAULT: "hsl(var(--popover))",
-                foreground: "hsl(var(--popover-foreground))",
-              },
-              card: {
-                DEFAULT: "hsl(var(--card))",
-                foreground: "hsl(var(--card-foreground))",
-              },
-            },
-            borderRadius: {
-              lg: "var(--radius)",
-              md: "calc(var(--radius) - 2px)",
-              sm: "calc(var(--radius) - 4px)",
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              mono: ['JetBrains Mono', 'Menlo', 'monospace'],
-            }
-          }
-        }
+      
+      .container {
+        width: 100%;
+        margin-right: auto;
+        margin-left: auto;
+        padding-right: 2rem;
+        padding-left: 2rem;
       }
-    </script>
+    </style>
     <script type="importmap">
     {
       "imports": {
